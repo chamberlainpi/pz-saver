@@ -1,0 +1,9 @@
+{
+  "name": "pz-saver",
+  "version": "1.0.0",
+  "description": "Project Zomboid Saver",
+  "main": "index.js",
+  "repository": "https://github.com/chamberlainpi/pz-saver.git",
+  "author": "Pierre Chamberlain",
+  "license": "MIT"
+}
