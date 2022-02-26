@@ -1,12 +1,12 @@
 <template>
-  <div class="bg-gray-300 p-4 gap-2">
-    <h1>
-      Counting: {{ count }} - connected:
-      <i :class="connectionStatus"></i>
-    </h1>
-    <button class="bg-green-300 text-white rounded-lg p-2" @click="socket.emit('increase')">Increase</button>
-    <button class="bg-red-300 text-white rounded-lg p-2" @click="socket.emit('decrease')">Decrease</button>
-  </div>
+  <h1>
+    Counting: {{ count }} - connected:
+    <i :class="connectionStatus"></i>
+  </h1>
+  <button class="bg-green-300 text-white rounded-lg p-2" @click="socket.emit('increase')">Increase</button>
+  <button class="bg-red-300 text-white rounded-lg p-2" @click="socket.emit('decrease')">Decrease</button>
+
+  <i class="text-4xl w-52 text-center font-mono tracking-widest"> ABCDEFG HIJKLMN OPQRSTU VWXYZ </i>
 </template>
 
 <script setup>

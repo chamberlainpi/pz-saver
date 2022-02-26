@@ -2,3 +2,104 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    .abs { position: absolute; }
+    .rel { position: relative; }
+    .hbox { display: flex; flex-direction: row; }
+    .vbox { display: flex; flex-direction: column; }
+    .all-center {
+        @apply flex justify-center items-center;
+    }
+    
+    .btn {
+        @apply rounded-md px-4 py-3 cursor-pointer bg-opacity-100 transition-colors duration-300;
+    }
+
+    .btn:hover {
+        @apply bg-opacity-80;
+    }
+    
+    .field {
+        @apply border rounded-md mx-1 px-2 py-1
+    }
+
+    .flex-break {
+        flex-basis: 100%;
+        height: 0;
+    }
+
+    .i { font-style: italic; }
+    .b { font-weight: bold; }
+    .pre { @apply whitespace-pre; }
+    .nowrap { @apply whitespace-nowrap; }
+
+    h1, h2, h3 { font-weight: bold; }
+
+    h1 { @apply text-3xl; }
+    h2 { @apply text-2xl; }
+    h3 { @apply text-xl; }
+
+    .debug {
+        @apply font-mono text-2xs whitespace-pre bg-green-500 block;
+    }
+}
+
+.for-mob { display: initial; }
+.for-tablet { display: none; }
+
+@media screen(tablet) {
+    .for-mob { display: none; }
+    .for-tablet { display: initial; }
+}
+
+:root, html, body {
+  font-family: 'Josefin Sans', sans-serif;
+}
+
+* {
+    scrollbar-width: none;
+}
+*::-webkit-scrollbar-track {
+    -webkit-box-shadow: none !important;
+    background-color: transparent !important;
+}
+
+.main-body {
+    --header-bar-height: 80px;
+    --search-bar-height: 80px;
+    --sidebar-width: 9rem;
+}
+
+@media screen(tablet) {
+    .main-body {
+        --sidebar-width: 16rem;
+    }
+}
+
+html, body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+i { font-style: normal; }
+
+.radial-gradient {
+    background: radial-gradient(closest-side, var(--tw-gradient-from), var(--tw-gradient-to));
+}
+
+[type="number"] {
+    text-indent: calc(100% - 20px);
+}
+
+/* Vue Router Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition-duration: 0.3s;
+  transition-property: opacity;
+  transition-timing-function: ease;
+}
+
+.fade-enter,
+.fade-leave-active {
+  opacity: 0
+}
