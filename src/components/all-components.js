@@ -1,8 +1,10 @@
 import _ from 'lodash'
 import PZHello from './PZHello.vue'
+import icon from './icon.vue'
 
 const AllComps = {
   PZHello,
+  icon,
 }
 
 export default {

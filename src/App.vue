@@ -1,42 +1,49 @@
-<script setup>
-TweenMax.to('.logo', 0.5, { rotation: '360' })
-</script>
-
 <template>
-  <div class="p-2 bg-gray-400 grid grid-cols-2">
-    <img class="logo" alt="PZ logo" src="./assets/PzLogo.png" />
-    <div class="vbox">
-      <i class="text-3xl">Test Almost</i>
-      <PZHello />
+  <div class="bg-gray-400 grid grid-cols-2">
+    <div class="rel w-72 h-40 scale-150">
+      <img class="logo btn" alt="PZ logo" src="./assets/PzLogo.png" @click="shake('.logo', 0.5, 10)" />
     </div>
-  </div>
 
-  <div class="p-6 text-2xl text-gray-700 vbox gap-2 overflow-y-scroll">
-    <h1 class="text-3xl text-red-900 nowrap">The Night Of The Living Dead</h1>
-    <p> It was a quiet night, and Donnie wanted to have a nice calm walk down the road, near the cemetery. </p>
+    <div class="vbox gap-2 z-10 p-2 bg-gray-200 bg-opacity-60">
+      <p>Please provide path to your PZ Saves:</p>
+      <div class="hbox items-center gap-2">
+        <i>PZRoot:</i>
+        <input
+          class="rounded-md p-2 shadow-inner shadow-red-300 bg-opacity-70 bg-white w-full"
+          type="text"
+          v-model="configuration.pzRoot" />
+      </div>
 
-    <p> Then the zombies started to wake up from their graves! So Donnie had to run, run fast, run for the hills! </p>
+      <template v-if="configuration.pzRoot">
+        <button class="btn bg-orange-400 text-white" @click="onLoadGameFolders">
+          <icon name="copy px-2" />
+          Load Game Folders
+          <icon name="sync px-2" />
+        </button>
+      </template>
 
-    <p>
-      He runs for the nearest building, it was a
-      <i class="text-yellow-200 bg-green-600 px-3 py-2 inline-block rounded-md">
-        <i class="fab fa-canadian-maple-leaf"></i>
-        Kent Building Supplies</i
-      >
-      store, but little did he know - it was full of ZOMBIES TOO!
-    </p>
-
-    <p>
-      He rushed out to avoid the big hoard of zombies inside the store, only to trip down on a grave and get surrounded
-      by all the zombies.
-    </p>
-
-    <h2>THE END</h2>
+      <button class="btn bg-green-800 text-white" @click="setConfig">Set Config</button>
+      <!-- <PZHello /> -->
+    </div>
   </div>
 </template>
 
-<style scoped>
-p {
-  @apply py-3 leading-10;
+<script setup>
+import { onMounted, ref } from '@vue/runtime-core'
+import { shake } from './utils/fx'
+import socket from './socket'
+import { axiosRef } from './utils/extensions'
+import axios from 'axios'
+
+const configuration = axiosRef({ pzRoot: '' }, '/api/config')
+
+async function setConfig() {
+  const response = await axios.post('/api/config', configuration.value)
+  trace(response)
 }
-</style>
+
+async function onLoadGameFolders() {
+  const { data } = await axios.get('/api/load-game-folders')
+  trace(data)
+}
+</script>
