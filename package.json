@@ -11,8 +11,10 @@
   "dependencies": {
     "autoprefixer": "^10.4.2",
     "axios": "^0.26.0",
+    "brownies": "^3.0.0",
     "chokidar": "^3.5.3",
     "colors": "^1.4.0",
+    "dayjs": "^1.10.8",
     "esm": "^3.2.25",
     "fastify": "^3.27.2",
     "fastify-cors": "^6.0.3",

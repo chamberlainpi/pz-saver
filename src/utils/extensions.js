@@ -26,3 +26,5 @@ export const intervalRef = (initVal, cbReturn, duration) => {
 
   return _ref
 }
+
+export const fixSlash = str => str.replace(/\\/g, '/')

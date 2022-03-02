@@ -1,9 +1,8 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import './index.css'
 import './utils/extensions'
+import './index.css'
+import { createApp } from 'vue'
 import AllComponents from './components/all-components'
-import socket from './socket'
+import App from './App.vue'
 
 const app = createApp(App)
 

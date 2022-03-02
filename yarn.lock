@@ -316,6 +316,11 @@ braces@^3.0.1, braces@~3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
+brownies@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/brownies/-/brownies-3.0.0.tgz#ec3952ae51077281743ea70f1cef37c59a023ba5"
+  integrity sha512-kVyGuOrr6LMspa+Mcb9RED6d33oZzJZ6ys020hxnYgoj4MCLz9mTbpL5m1tAjk+jhK3vQ1h+ftd93z6miG+AXw==
+
 browserslist@^4.19.1:
   version "4.19.3"
   resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.19.3.tgz#29b7caad327ecf2859485f696f9604214bedd383"
@@ -441,6 +446,11 @@ csstype@^2.6.8:
   version "2.6.19"
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-2.6.19.tgz#feeb5aae89020bb389e1f63669a5ed490e391caa"
   integrity sha512-ZVxXaNy28/k3kJg0Fou5MiYpp88j7H9hLZp8PDC3jV0WFjfH5E9xHb56L0W59cPbKbcHXeP4qyT8PrHp8t6LcQ==
+
+dayjs@^1.10.8:
+  version "1.10.8"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.8.tgz#267df4bc6276fcb33c04a6735287e3f429abec41"
+  integrity sha512-wbNwDfBHHur9UOzNUjeKUOJ0fCb0a52Wx0xInmQ7Y8FstyajiV1NmK1e00cxsr9YrE9r7yAChE0VvpuY5Rnlow==
 
 debug@^4.0.0, debug@~4.3.1, debug@~4.3.2:
   version "4.3.3"
