@@ -2,16 +2,18 @@
   "name": "pz-saver",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "nodemon -r esm ./src/server/server.js -w src/server"
+    "server": "nodemon ./src/server/server.js -w src/server"
   },
   "dependencies": {
     "autoprefixer": "^10.4.2",
     "axios": "^0.26.0",
     "brownies": "^3.0.0",
+    "byte-size": "^8.1.0",
     "chokidar": "^3.5.3",
     "colors": "^1.4.0",
     "dayjs": "^1.10.8",
@@ -20,6 +22,7 @@
     "fastify-cors": "^6.0.3",
     "fastify-socket.io": "^3.0.0",
     "fs-extra": "^10.0.1",
+    "jszip": "^3.7.1",
     "lodash": "^4.17.21",
     "postcss": "^8.4.7",
     "socket.io": "^4.4.1",

@@ -6,6 +6,10 @@ import yaml from 'yaml'
 export async function readdir(rootDir, opts = {}) {
   opts = _.defaults(opts, { depth: 1, private: false, nodir: true })
 
+  if (_.isString(opts.filter)) {
+    const ext = opts.filter
+    opts.filter = p => p.includes(ext)
+  }
   async function _recursive(dir, depth, results = []) {
     if (depth < 1) return
 
@@ -21,6 +25,7 @@ export async function readdir(rootDir, opts = {}) {
     const dirsFiltered = dirs.filter(({ basename, isDir }) => {
       if (!opts.private && basename.startsWith('.')) return false
       if (opts.filterNoDir && isDir) return false
+      if (opts.filter && !opts.filter(basename)) return false
 
       return true
     })
@@ -35,7 +40,11 @@ export async function readdir(rootDir, opts = {}) {
     return results
   }
 
-  return await _recursive(rootDir, opts.depth)
+  const allResults = await _recursive(rootDir, opts.depth)
+
+  if (opts.bare) return allResults.map(p => p.path)
+
+  return allResults
 }
 
 export function makeRoutesFromObj(fastify, routeObj) {

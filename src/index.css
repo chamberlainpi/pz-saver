@@ -42,6 +42,14 @@
     .debug {
         @apply font-mono text-2xs whitespace-pre bg-green-500 block;
     }
+
+    .small-tag {
+        @apply px-2 pb-0 pt-1 mx-2 rel -top-1 text-white bg-gray-600 font-bold text-sm rounded-md
+    }
+
+    .panel {
+        @apply p-2 rounded-xl bg-purple-50
+    }
 }
 
 .for-mob { display: initial; }

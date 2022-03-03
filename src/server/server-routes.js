@@ -1,15 +1,17 @@
 import fs from 'fs-extra'
 import _ from 'lodash'
+import path from 'path'
 import yaml from 'yaml'
-import { readdir } from './sv-extensions'
+import { readdir } from './sv-extensions.js'
+import byteSize from 'byte-size'
+import JSZip from 'jszip'
+import dayjs from 'dayjs'
 
-async function saveConfig(state) {
-  const yamlStr = yaml.stringify(state.config)
+async function saveData(data, uri) {
+  const yamlStr = yaml.stringify(data)
 
-  trace('YAML config', state.config)
-
-  await fs.writeFile(state.YAML_CONFIG, yamlStr, 'utf8')
-  return { isOK: true, config: state.config, yaml: yamlStr }
+  await fs.writeFile(uri, yamlStr, 'utf8')
+  return { isOK: true, data }
 }
 
 export const createRoutes = state => ({
@@ -20,7 +22,7 @@ export const createRoutes = state => ({
   'POST::/config': async (req, res) => {
     state.config = req.body
 
-    return await saveConfig(state)
+    return await saveData(state.config, state.YAML_CONFIG)
   },
 
   'GET::/load-game-folders': async (req, res) => {
@@ -38,4 +40,175 @@ export const createRoutes = state => ({
 
     return filteredGameSaves
   },
+
+  'GET::/status': (req, res) => {
+    return {
+      isBaselineSnapped: state.baselineObjs != null,
+      isCurrentSnapped: state.currentObjs != null,
+      report: state.report,
+    }
+  },
+
+  'GET::/backups': async (req, res) => {
+    const zipFiles = await readdir(state.PRIVATE_DIR, {
+      filter: '.zip',
+      bare: true,
+    })
+
+    state.zipFiles = zipFiles.map((value, key) => ({ value, key }))
+
+    return state.zipFiles
+  },
+
+  'PUT::/backup-restore/:id': async (req, res) => {
+    const zipInfo = state.zipFiles[req.params.id]
+
+    if (!zipInfo) return { isError: 'Zip does not exists' }
+
+    const zipContent = await fs.readFile(zipInfo.value)
+    const zip = await JSZip.loadAsync(zipContent)
+
+    const allFiles = []
+    zip.forEach((relPath, file) => {
+      allFiles.push({ relPath, file })
+    })
+
+    for (var { relPath, file } of allFiles) {
+      const absPath = path.join(state.config.current, relPath)
+
+      trace('Writing: ', absPath)
+
+      if (absPath.endsWith('\\')) {
+        await fs.mkdirp(absPath)
+      } else {
+        const fileBuffer = await file.async('nodebuffer')
+        await fs.writeFile(absPath, fileBuffer)
+      }
+    }
+
+    return { ok: 1, zip: zipInfo.value }
+  },
+
+  'DELETE::/backup-delete/:id': async (req, res) => {
+    const zipInfo = state.zipFiles[req.params.id]
+
+    if (!zipInfo) return { isError: 'Zip does not exists' }
+
+    await fs.unlink(zipInfo.value)
+
+    return { deleted: 1, zip: zipInfo.value }
+  },
+
+  'POST::/baseline-snapshot': async (req, res) => {
+    const { baseline } = state.config
+    const baselineFiles = await readdir(baseline, { depth: 5 })
+    state.baselineObjs = toPathObjects(baselineFiles, baseline)
+
+    return { isOK: true, baselineObjs: state.baselineObjs != null }
+  },
+
+  'POST::/save-snapshot': async (req, res) => {
+    const { report } = state
+    if (!state.report) return { isError: 'No report object created yet.' }
+
+    const zip = new JSZip()
+    const allFiles = [...report.added, ...report.modified] // ...report.accessed, ...report.statusChanged]
+
+    for (var f of allFiles) {
+      const fullpath = `${report.meta.current}/${f}`
+
+      zip.file(f, fs.readFile(fullpath))
+    }
+
+    const prom = new Promise(_then => {
+      const now = dayjs().format('YYYY-MM-DD_HH-mm-ss')
+      const baselineName = state.config.baseline.split('/').pop() + '__' + now
+      const outFile = state.ZIP_SNAPSHOT.replace('[name]', baselineName)
+
+      zip
+        .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
+        .pipe(fs.createWriteStream(outFile))
+        .on('finish', () => {
+          trace('ZIP finished: ', outFile)
+          _then(true)
+        })
+    })
+
+    const result = await prom
+
+    return { isZipped: result }
+  },
+
+  'GET::/file-diffs-compare': async (req, res) => {
+    const { baselineObjs } = state
+    if (!baselineObjs) {
+      return { isError: 'Missing baseline snapshot' }
+    }
+
+    const { baseline, current } = state.config
+    const currentFiles = await readdir(current, { depth: 5 })
+
+    const dateCompared = new Date()
+    const currentObjs = toPathObjects(currentFiles, current)
+    state.currentObjs = currentObjs
+    const report = {
+      meta: { dateCompared, baseline, current },
+      added: [],
+      modified: [],
+      accessed: [],
+      statusChanged: [],
+    }
+
+    const sizes = []
+
+    for (var shortPath in currentObjs) {
+      const curr = currentObjs[shortPath]
+      const base = baselineObjs[shortPath]
+      let isConsidered = false
+
+      if (!base) {
+        report.added.push(shortPath)
+        isConsidered = true
+      } else {
+        // if (curr.atimeMs > base.atimeMs) {
+        //   report.accessed.push(shortPath)
+        //   isConsidered = true
+        // }
+
+        if (curr.mtimeMs > base.mtimeMs) {
+          report.modified.push(shortPath)
+          isConsidered = true
+        }
+
+        // if (curr.ctimeMs > base.ctimeMs) {
+        //   report.statusChanged.push(shortPath)
+        //   isConsidered = true
+        // }
+      }
+
+      if (isConsidered) {
+        sizes.push(curr.size)
+      }
+    }
+
+    report.meta.totalSize = sizes.reduce((acc, size) => acc + size, 0)
+    report.meta.totalSizePretty = byteSize(report.meta.totalSize).toString()
+
+    state.report = report
+
+    return report
+  },
 })
+
+const toPathObjects = (files, baseURL) => {
+  const results = {}
+
+  for (var file of files) {
+    if (file.isDir) continue
+    const shortPath = file.path.replace(baseURL + '/', '')
+    const { size, atimeMs, mtimeMs, ctimeMs } = fs.statSync(file.path)
+    results[shortPath] = { size, atimeMs, mtimeMs, ctimeMs }
+  }
+
+  return results
+}
