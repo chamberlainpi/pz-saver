@@ -68,23 +68,28 @@ export const createRoutes = state => ({
     const zipContent = await fs.readFile(zipInfo.value)
     const zip = await JSZip.loadAsync(zipContent)
 
-    const allFiles = []
+    const allWriteOperations = []
+
     zip.forEach((relPath, file) => {
-      allFiles.push({ relPath, file })
+      allWriteOperations.push({ relPath, file })
     })
 
-    for (var { relPath, file } of allFiles) {
-      const absPath = path.join(state.config.current, relPath)
+    console.clear()
 
-      trace('Writing: ', absPath)
+    const writeFileOrFolder = async ({ relPath, file }) => {
+      const absPath = path.join(state.config.current + '\\test', relPath)
 
-      if (absPath.endsWith('\\')) {
-        await fs.mkdirp(absPath)
-      } else {
-        const fileBuffer = await file.async('nodebuffer')
-        await fs.writeFile(absPath, fileBuffer)
+      if (absPath.endsWith('\\') && !fs.existsSync(absPath)) {
+        trace('Make dir: '.yellow, relPath)
+        return await fs.mkdirp(absPath)
       }
+
+      trace('Writing: '.green, relPath)
+      const buff = await file.async('nodebuffer')
+      return await fs.writeFile(absPath, buff)
     }
+
+    await Promise.all(allWriteOperations.map(writeFileOrFolder))
 
     return { ok: 1, zip: zipInfo.value }
   },

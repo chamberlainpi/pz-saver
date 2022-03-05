@@ -89,7 +89,7 @@ html, body {
     overflow-y: hidden;
 }
 
-i { font-style: normal; }
+i { font-style: normal; display: inline-block; }
 
 .radial-gradient {
     background: radial-gradient(closest-side, var(--tw-gradient-from), var(--tw-gradient-to));

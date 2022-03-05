@@ -1,10 +1,18 @@
 import _ from 'lodash'
 import PZHello from './PZHello.vue'
 import icon from './icon.vue'
+import ToggleButton from './ToggleButton.vue'
+import PanelConfigGameFolders from './PanelConfigGameFolders.vue'
+import PanelSavedSnapshots from './PanelSavedSnapshots.vue'
+import PanelFileDiffs from './PanelFileDiffs.vue'
 
 const AllComps = {
-  PZHello,
   icon,
+  PanelConfigGameFolders,
+  PanelSavedSnapshots,
+  PanelFileDiffs,
+  PZHello,
+  ToggleButton,
 }
 
 export default {

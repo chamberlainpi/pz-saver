@@ -1,9 +1,18 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 
 globalThis.trace = console.log.bind(console)
 
 export const wait = duration => new Promise(_then => setTimeout(_then, duration))
+export const waitUntil = getter =>
+  new Promise(_then => {
+    function _nextTick() {
+      const result = getter()
+      if (result) return _then(result)
+      requestAnimationFrame(_nextTick)
+    }
+    _nextTick()
+  })
 
 export const axiosRef = (initVal, url) => {
   const _ref = ref(initVal)
@@ -26,5 +35,11 @@ export const intervalRef = (initVal, cbReturn, duration) => {
 
   return _ref
 }
+
+export const useModelWrapper = (props, emit, name = 'modelValue') =>
+  computed({
+    get: () => props[name],
+    set: v => emit(`update:${name}`, v),
+  })
 
 export const fixSlash = str => str.replace(/\\/g, '/')
