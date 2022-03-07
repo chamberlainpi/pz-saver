@@ -2,7 +2,6 @@ import _ from 'lodash'
 import icon from './icon.vue'
 import ToggleButton from './ToggleButton.vue'
 import PanelConfigGameFolders from './PanelConfigGameFolders.vue'
-import PanelFileDiffs from './PanelFileDiffs.vue'
 import PanelPeriodicSnapshot from './PanelPeriodicSnapshot.vue'
 import PanelSavedSnapshots from './PanelSavedSnapshots.vue'
 
@@ -10,7 +9,6 @@ import PanelSavedSnapshots from './PanelSavedSnapshots.vue'
 const AllComps = {
   icon,
   PanelConfigGameFolders,
-  PanelFileDiffs,
   PanelPeriodicSnapshot,
   PanelSavedSnapshots,
   ToggleButton,

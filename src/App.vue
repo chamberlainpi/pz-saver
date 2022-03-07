@@ -7,7 +7,7 @@
     </div>
 
     <div class="vbox rel z-10 bg-white bg-opacity-80">
-      <div class="vbox p-4">
+      <div class="vbox p-4 gap-2">
         <div class="hbox nowrap">
           <div class="hbox items-center gap-2" v-if="!isCompact">
             <i>PZ Root:</i>
@@ -31,9 +31,8 @@
         </div>
 
         <template v-if="configuration.pzRoot">
-          <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" v-if="!isCompact" />
           <PanelPeriodicSnapshot ref="panelPeriodicSnapshot" :config="configuration" @save-buffer="onSnapshotSaved" />
-
+          <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" v-if="!isCompact" />
           <PanelSavedSnapshots ref="panelSavedSnapshots" v-if="!isCompact" />
         </template>
       </div>

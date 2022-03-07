@@ -22,8 +22,6 @@ async function saveData(data, uri) {
 }
 
 export const createRoutes = state => ({
-  'GET::/': (req, res) => 'Hello World',
-  'GET::/count': (req, res) => [state.count],
   'GET::/config': (req, res) => [state.config],
 
   'POST::/config': async (req, res) => {
@@ -111,14 +109,6 @@ export const createRoutes = state => ({
     return { deleted: 1, zip: zipInfo.value }
   },
 
-  'POST::/baseline-snapshot': async (req, res) => {
-    const { baseline } = state.config
-    const baselineFiles = await readdir(baseline, { depth: 5 })
-    state.baselineObjs = toPathObjects(baselineFiles, baseline)
-
-    return { isOK: true, baselineObjs: state.baselineObjs != null }
-  },
-
   'POST::/buffer-snapshot': async (req, res) => {
     ///////////////////////////////////////////////////////////////////////////////////////
     if (ZIP_SNAPSHOTS.isSaving) return { isError: 'Saving in progress, cannot buffer a snapshot' }
@@ -133,7 +123,6 @@ export const createRoutes = state => ({
     const currentSnapshot = ZIP_SNAPSHOTS.pair[ZIP_SNAPSHOTS.index]
 
     const zip = (currentSnapshot.zip = new JSZip())
-    // currentSnapshot.allFiles = allFiles
 
     const prettyMem = () => {
       const memResults = _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
@@ -166,6 +155,11 @@ export const createRoutes = state => ({
     const index = req.body.which === 'now' ? ZIP_SNAPSHOTS.index : 1 - ZIP_SNAPSHOTS.index
     const currentSnapshot = ZIP_SNAPSHOTS.pair[index]
 
+    if (!currentSnapshot.zip) {
+      ZIP_SNAPSHOTS.isSaving = false
+      return { isError: `No ZIP ready yet, might be too early / full cycle didn't happen yet?` }
+    }
+
     const prom = new Promise(_then => {
       const { zip, name } = currentSnapshot
       const outFile = state.ZIP_SNAPSHOT.replace('[name]', name)
@@ -184,109 +178,4 @@ export const createRoutes = state => ({
 
     return { isZipped: result }
   },
-
-  'POST::/save-snapshot': async (req, res) => {
-    const { report } = state
-    if (!state.report) return { isError: 'No report object created yet.' }
-
-    const zip = new JSZip()
-    const allFiles = [...report.added, ...report.modified] // ...report.accessed, ...report.statusChanged]
-
-    for (var f of allFiles) {
-      const fullpath = `${report.meta.current}/${f}`
-
-      zip.file(f, fs.readFile(fullpath))
-    }
-
-    const prom = new Promise(_then => {
-      const now = dayjs().format('YYYY-MM-DD_HH-mm-ss')
-      const baselineName = state.config.baseline.split('/').pop() + '__' + now
-      const outFile = state.ZIP_SNAPSHOT.replace('[name]', baselineName)
-
-      zip
-        .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
-        .pipe(fs.createWriteStream(outFile))
-        .on('finish', () => {
-          trace('ZIP finished: ', outFile)
-          _then(true)
-        })
-    })
-
-    const result = await prom
-
-    return { isZipped: result }
-  },
-
-  'GET::/file-diffs-compare': async (req, res) => {
-    const { baselineObjs } = state
-    if (!baselineObjs) {
-      return { isError: 'Missing baseline snapshot' }
-    }
-
-    const { baseline, current } = state.config
-    const currentFiles = await readdir(current, { depth: 5 })
-
-    const dateCompared = new Date()
-    const currentObjs = toPathObjects(currentFiles, current)
-    state.currentObjs = currentObjs
-    const report = {
-      meta: { dateCompared, baseline, current },
-      added: [],
-      modified: [],
-      accessed: [],
-      statusChanged: [],
-    }
-
-    const sizes = []
-
-    for (var shortPath in currentObjs) {
-      const curr = currentObjs[shortPath]
-      const base = baselineObjs[shortPath]
-      let isConsidered = false
-
-      if (!base) {
-        report.added.push(shortPath)
-        isConsidered = true
-      } else {
-        // if (curr.atimeMs > base.atimeMs) {
-        //   report.accessed.push(shortPath)
-        //   isConsidered = true
-        // }
-
-        if (curr.mtimeMs > base.mtimeMs) {
-          report.modified.push(shortPath)
-          isConsidered = true
-        }
-
-        // if (curr.ctimeMs > base.ctimeMs) {
-        //   report.statusChanged.push(shortPath)
-        //   isConsidered = true
-        // }
-      }
-
-      if (isConsidered) {
-        sizes.push(curr.size)
-      }
-    }
-
-    report.meta.totalSize = sizes.reduce((acc, size) => acc + size, 0)
-    report.meta.totalSizePretty = byteSize(report.meta.totalSize).toString()
-
-    state.report = report
-
-    return report
-  },
 })
-
-const toPathObjects = (files, baseURL) => {
-  const results = {}
-
-  for (var file of files) {
-    if (file.isDir) continue
-    const shortPath = file.path.replace(baseURL + '/', '')
-    const { size, atimeMs, mtimeMs, ctimeMs } = fs.statSync(file.path)
-    results[shortPath] = { size, atimeMs, mtimeMs, ctimeMs }
-  }
-
-  return results
-}

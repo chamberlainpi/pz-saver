@@ -1,5 +1,5 @@
 <template>
-  <div class="file-backups p-2 panel mt-2">
+  <div class="file-backups p-2 panel">
     <div class="hbox items-center">
       <h1><icon name="camera p-2" />Saved Snapshots</h1>
     </div>

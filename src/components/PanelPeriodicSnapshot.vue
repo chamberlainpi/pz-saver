@@ -39,6 +39,9 @@
         hasEnoughSnaps ? toDuration(snapshotPairs[1].dateZippedMS) : '[not ready yet]'
       }}</i>
     </button>
+    <i class="border-4 border-double border-red-600 p-2" v-if="errorMessage">
+      {{ errorMessage }}
+    </i>
   </div>
 </template>
 
@@ -55,6 +58,7 @@ const hasEnoughSnaps = computed(() => snapshotPairs.value.length == 2)
 const isAutoSaveActive = ref(false)
 const periodChoices = '2s 10s 30s 5m 20m 60m'.split(' ')
 const periodSelected = ref('10s')
+const errorMessage = ref('')
 
 const emit = defineEmits()
 
@@ -90,7 +94,14 @@ async function autoSnapshot() {
 }
 
 async function onSaveBufferNow(which) {
+  errorMessage.value = ''
   let { data } = await axios.post('/api/buffer-write-current', { which })
+  if (data.isError) {
+    errorMessage.value = data.isError
+    setTimeout(() => (errorMessage.value = ''), 3000)
+    return
+  }
+
   trace('onSaveBufferNow', data)
 
   emit('save-buffer')
