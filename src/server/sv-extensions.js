@@ -2,6 +2,7 @@ import _ from 'lodash'
 import fs from 'fs-extra'
 import path from 'path'
 import yaml from 'yaml'
+import { exec } from 'child_process'
 
 export async function readdir(rootDir, opts = {}) {
   opts = _.defaults(opts, { depth: 1, private: false, nodir: true })
@@ -72,4 +73,27 @@ export async function tryLoadFile(uri, fallbackData) {
   const data = await fs.readFile(uri, 'utf8')
 
   return yaml.parse(data)
+}
+
+const OS_PROCESS_RUNNING = {
+  win32: `tasklist`,
+  darwin: `ps -ax | grep $PROC`,
+  linux: `ps -A`,
+}
+export async function isProcessRunning(names) {
+  if (_.isString(names)) {
+    names = { win32: names, darwin: names, linux: names }
+  }
+
+  const { platform } = process
+  const processName = names[platform].toLowerCase()
+  const cmd = !(platform in OS_PROCESS_RUNNING) ? false : OS_PROCESS_RUNNING[platform].replace('$PROC', processName)
+
+  return new Promise((_then, _catch) => {
+    exec(cmd, (err, stdout, stderr) => {
+      if (err) _catch(err)
+
+      _then(stdout.toLowerCase().includes(processName))
+    })
+  })
 }

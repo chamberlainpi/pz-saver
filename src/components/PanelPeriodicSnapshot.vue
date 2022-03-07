@@ -4,8 +4,16 @@
       <h1 class="mr-4"><icon name="camera p-2" />Periodic Snapshot</h1>
 
       <div class="hbox items-center ml-auto">
+        <template v-if="!isCompact">
+          <i
+            class="b px-1 border rounded-md border-transparent transition-colors duration-200"
+            :class="{ 'border-green-700': isPZRunning && isAutoStart }">
+            Auto-Start
+          </i>
+          <ToggleButton v-model="isAutoStart" />
+        </template>
         <i class="b">Enabled</i>
-        <ToggleButton v-model="isAutoSaveActive" label="Auto-Save" />
+        <ToggleButton v-model="isEnabled" />
       </div>
     </div>
 
@@ -48,27 +56,39 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from '@vue/runtime-core'
 import { toDuration } from '../utils/extensions'
+import { configuration, status, checkStatuses } from '../store'
 import _ from 'lodash'
 import axios from 'axios'
+import { cookies } from 'brownies'
 
 var _twnAutoSave = null
 const snapshotPairs = ref([])
 const isSnapping = ref(false)
 const hasEnoughSnaps = computed(() => snapshotPairs.value.length == 2)
-const isAutoSaveActive = ref(false)
+const isEnabled = ref(false)
+const isAutoStart = ref(cookies.isAutoStart ?? false)
 const periodChoices = '2s 10s 30s 5m 20m 60m'.split(' ')
-const periodSelected = ref('10s')
+const periodSelected = ref('5m')
 const errorMessage = ref('')
+const isPZRunning = computed(() => status.value.isPZRunning)
+
+watch(isAutoStart, bool => ((cookies.isAutoStart = bool), updateEnabled(bool)))
+watch(isPZRunning, bool => updateEnabled(bool))
+
+const updateEnabled = bool => isAutoStart.value && (isEnabled.value = bool)
 
 const emit = defineEmits()
+const props = defineProps({
+  isCompact: Boolean,
+})
 
-watch(isAutoSaveActive, bool => {
+watch(isEnabled, bool => {
   autoSnapshot()
 })
 
 const units = { s: 1, m: 60 }
 async function autoSnapshot() {
-  if (!isAutoSaveActive.value) {
+  if (!isEnabled.value) {
     TweenMax.set('#progress', { width: '0%' })
     _twnAutoSave && _twnAutoSave.kill()
     return

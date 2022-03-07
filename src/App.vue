@@ -31,7 +31,11 @@
         </div>
 
         <template v-if="configuration.pzRoot">
-          <PanelPeriodicSnapshot ref="panelPeriodicSnapshot" :config="configuration" @save-buffer="onSnapshotSaved" />
+          <PanelPeriodicSnapshot
+            ref="panelPeriodicSnapshot"
+            :config="configuration"
+            @save-buffer="onSnapshotSaved"
+            :isCompact="isCompact" />
           <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" v-if="!isCompact" />
           <PanelSavedSnapshots ref="panelSavedSnapshots" v-if="!isCompact" />
         </template>
@@ -53,7 +57,9 @@ const panelConfigGameFolders = ref(null)
 const panelFileDiffs = ref(null)
 const panelSavedSnapshots = ref(null)
 const panelPeriodicSnapshot = ref(null)
-const isCompact = ref(true)
+const isCompact = ref(cookies.isCompact ?? true)
+
+watch(isCompact, bool => (cookies.isCompact = bool))
 
 async function onSnapshotSaved() {
   if (!panelSavedSnapshots || !panelSavedSnapshots.value) return

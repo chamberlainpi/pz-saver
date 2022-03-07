@@ -2,7 +2,7 @@ import fs from 'fs-extra'
 import _ from 'lodash'
 import path from 'path'
 import yaml from 'yaml'
-import { readdir } from './sv-extensions.js'
+import { isProcessRunning, readdir } from './sv-extensions.js'
 import byteSize from 'byte-size'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
@@ -46,12 +46,9 @@ export const createRoutes = state => ({
     return filteredGameSaves
   },
 
-  'GET::/status': (req, res) => {
-    return {
-      isBaselineSnapped: state.baselineObjs != null,
-      isCurrentSnapped: state.currentObjs != null,
-      report: state.report,
-    }
+  'GET::/status': async (req, res) => {
+    const isPZRunning = await isProcessRunning('Zomboid')
+    return { isPZRunning }
   },
 
   'GET::/backups': async (req, res) => {
@@ -79,22 +76,35 @@ export const createRoutes = state => ({
       allWriteOperations.push({ relPath, file })
     })
 
-    console.clear()
-
+    const errors = []
     const writeFileOrFolder = async ({ relPath, file }) => {
       const absPath = path.join(state.config.current, relPath)
-
-      if (absPath.endsWith('\\') && !fs.existsSync(absPath)) {
-        trace('Make dir: '.yellow, relPath)
-        return await fs.mkdirp(absPath)
+      const exists = fs.existsSync(absPath)
+      try {
+        if (absPath.endsWith('\\')) {
+          if (!exists) {
+            await fs.mkdirp(absPath)
+            //process.stdout.write('|')
+          } else {
+            //process.stdout.write('_')
+          }
+        } else {
+          const buff = await file.async('nodebuffer')
+          await fs.writeFile(absPath, buff)
+          //process.stdout.write('.')
+        }
+      } catch (err) {
+        errors.push('Could not write: ' + absPath + ' ' + exists)
+        //process.stdout.write('X'.red)
       }
-
-      trace('Writing: '.green, relPath)
-      const buff = await file.async('nodebuffer')
-      return await fs.writeFile(absPath, buff)
     }
 
     await Promise.all(allWriteOperations.map(writeFileOrFolder))
+    trace(`\nWrote ${allWriteOperations.length} files & folders over saved game.`)
+
+    if (errors.length) {
+      trace(errors.join('\n').red)
+    }
 
     return { ok: 1, zip: zipInfo.value }
   },
