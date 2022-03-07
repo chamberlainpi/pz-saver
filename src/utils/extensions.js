@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import axios from 'axios'
+import dayjs from 'dayjs'
 
 globalThis.trace = console.log.bind(console)
 
@@ -43,3 +44,9 @@ export const useModelWrapper = (props, emit, name = 'modelValue') =>
   })
 
 export const fixSlash = str => str.replace(/\\/g, '/')
+
+export const toDuration = (ms, now) =>
+  dayjs //
+    .duration((now || dayjs()).diff(dayjs(ms)))
+    .format('D[d] HH:mm:ss [ago]')
+    .replace('0d ', '')

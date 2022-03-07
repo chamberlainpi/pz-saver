@@ -135,14 +135,14 @@ export const createRoutes = state => ({
     const zip = (currentSnapshot.zip = new JSZip())
     // currentSnapshot.allFiles = allFiles
 
-    const prettyMem = () => _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
-    const now = _.now()
-    // trace('process.memoryUsage() BEFORE', now, prettyMem())
+    const prettyMem = () => {
+      const memResults = _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
+      return JSON.stringify(memResults).replace(/[{}"]/g, '').replace(/,/g, ', ')
+    }
 
     for (var fullpath of allFiles) {
       const relPath = fullpath.replace(current + '/', '')
       zip.file(relPath, fs.readFile(fullpath))
-      // trace('Zipping', relPath)
     }
 
     try {
@@ -150,19 +150,21 @@ export const createRoutes = state => ({
     } catch (err) {
       console.log('Should run with V8 flag: --expose-gc')
     }
-
-    currentSnapshot.dateZippedMS = now
+    currentSnapshot.dateZippedMS = _.now()
     currentSnapshot.name = currentName
 
-    trace('process.memoryUsage() AFTER', now, prettyMem())
+    trace('POST::/buffer-snapshot:'.gray, `# files: ${allFiles.length}\n  ${prettyMem().yellow}`)
 
     const pair = ZIP_SNAPSHOTS.pair.map(p => _.omit(p, 'zip'))
     return { isBuffered: true, pair }
   },
 
   'POST::/buffer-write-current': async (req, res) => {
-    ZIP_SNAPSHOTS.isBusy = true
-    const currentSnapshot = ZIP_SNAPSHOTS.pair[ZIP_SNAPSHOTS.index]
+    if (ZIP_SNAPSHOTS.isSaving) return { isError: 'Already busy writing ZIP file.' }
+    ZIP_SNAPSHOTS.isSaving = true
+
+    const index = req.body.which === 'now' ? ZIP_SNAPSHOTS.index : 1 - ZIP_SNAPSHOTS.index
+    const currentSnapshot = ZIP_SNAPSHOTS.pair[index]
 
     const prom = new Promise(_then => {
       const { zip, name } = currentSnapshot
@@ -173,7 +175,7 @@ export const createRoutes = state => ({
         .pipe(fs.createWriteStream(outFile))
         .on('finish', () => {
           trace('ZIP finished current: ', outFile)
-          ZIP_SNAPSHOTS.isBusy = false
+          ZIP_SNAPSHOTS.isSaving = false
           _then(true)
         })
     })

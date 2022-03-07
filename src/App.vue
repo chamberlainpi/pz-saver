@@ -8,11 +8,11 @@
 
     <div class="vbox rel z-10 bg-white bg-opacity-80">
       <div class="vbox p-4">
-        <div class="vbox max-w-xl nowrap">
-          <div class="hbox items-center gap-2">
+        <div class="hbox nowrap">
+          <div class="hbox items-center gap-2" v-if="!isCompact">
             <i>PZ Root:</i>
             <input
-              class="rounded-md p-2 shadow-inner shadow-red-300 bg-opacity-70 bg-white w-full"
+              class="rounded-md p-2 shadow-inner shadow-gray-500 bg-opacity-70 bg-white w-full"
               type="text"
               v-model="configuration.pzRoot" />
 
@@ -21,39 +21,20 @@
               Save
             </button>
           </div>
+
+          <div class="ml-auto" v-if="configuration.pzRoot">
+            <button class="btn w-36 bg-gray-700 text-white" @click="isCompact = !isCompact">
+              <icon name="gear" />
+              {{ isCompact ? 'Advanced' : 'Compact' }}
+            </button>
+          </div>
         </div>
 
         <template v-if="configuration.pzRoot">
-          <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" />
+          <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" v-if="!isCompact" />
+          <PanelPeriodicSnapshot ref="panelPeriodicSnapshot" :config="configuration" @save-buffer="onSnapshotSaved" />
 
-          <!-- <PanelFileDiffs ref="panelFileDiffs" @save-snapshot="onSnapshotSaved" /> -->
-
-          <div class="periodic-snapshot mt-3 panel border-red-600border border-red-500">
-            <div class="hbox items-center pb-4">
-              <h1 class="mr-4"><icon name="camera p-2" />Periodic Snapshot</h1>
-
-              <div class="hbox items-center ml-auto">
-                <i class="b">Enabled</i>
-                <ToggleButton v-model="isAutoSaveActive" label="Auto-Save" />
-              </div>
-            </div>
-
-            <div class="hbox border border-black rounded-md mb-2 p-1">
-              <div id="progress" class="h-3 rounded-md" :class="isSnapping ? 'bg-yellow-400' : 'bg-green-600'"></div>
-            </div>
-            <div class="hbox gap-2 text-2xl">
-              <icon name="clock" />
-              <i class="mr-2">Every:</i>
-              <label v-for="period in periodChoices" :key="period">
-                <input type="radio" class="scale-150 mr-2 ml-4" :value="period" v-model="periodSelected" />
-                <i>{{ period }}</i>
-              </label>
-            </div>
-
-            <button class="btn w-full h-48 bg-red-900 text-white" @click="onSaveBufferNow"> SAVE NOW! </button>
-          </div>
-
-          <PanelSavedSnapshots ref="panelSavedSnapshots" />
+          <PanelSavedSnapshots ref="panelSavedSnapshots" v-if="!isCompact" />
         </template>
       </div>
     </div>
@@ -61,8 +42,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from '@vue/runtime-core'
-import { axiosRef, fixSlash, wait, waitUntil } from './utils/extensions'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from '@vue/runtime-core'
+import { axiosRef, fixSlash, wait, waitUntil, toDuration } from './utils/extensions'
 import { cookies } from 'brownies'
 import { shake } from './utils/fx'
 import socket from './socket'
@@ -73,48 +54,11 @@ import { configuration, status } from './store'
 const panelConfigGameFolders = ref(null)
 const panelFileDiffs = ref(null)
 const panelSavedSnapshots = ref(null)
-const periodChoices = '2s 10s 30s 5m 20m 60m'.split(' ')
-const periodSelected = ref('10s')
-const isAutoSaveActive = ref(false)
-const isSnapping = ref(false)
-var _twnAutoSave = null
-
-const units = { s: 1, m: 60 }
-watch(isAutoSaveActive, bool => {
-  autoSnapshot()
-})
-
-async function autoSnapshot() {
-  if (!isAutoSaveActive.value) {
-    _twnAutoSave && _twnAutoSave.kill()
-    return
-  }
-
-  const [_, time, unit] = periodSelected.value.match(/([0-9]*)([a-z]*)/)
-  const interval = time * units[unit]
-
-  isSnapping.value = true
-  TweenMax.set('#progress', { width: '100%' })
-
-  let { data } = await axios.post('/api/buffer-snapshot')
-
-  isSnapping.value = false
-  _twnAutoSave = TweenMax.fromTo(
-    '#progress',
-    interval,
-    { width: '0%' },
-    { width: '100%', ease: t => t, onComplete: autoSnapshot }
-  )
-}
-
-async function onSaveBufferNow() {
-  let { data } = await axios.post('/api/buffer-write-current')
-  trace('onSaveBufferNow', data)
-
-  await panelSavedSnapshots.value.updateBackupsList()
-}
+const panelPeriodicSnapshot = ref(null)
+const isCompact = ref(true)
 
 async function onSnapshotSaved() {
+  if (!panelSavedSnapshots || !panelSavedSnapshots.value) return
   await panelSavedSnapshots.value.updateBackupsList()
 }
 

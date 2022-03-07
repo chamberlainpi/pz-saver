@@ -9,17 +9,9 @@
         </button>
 
         <button
-          class="path-baseline btn bg-purple-600 text-white"
-          :class="{ 'opacity-50': !oneSelected || isCurrent(oneSelected) }"
-          :disabled="!oneSelected || isCurrent(oneSelected)"
-          @click="onSetAsBaseline">
-          Set Baseline
-        </button>
-
-        <button
           class="path-current btn bg-green-600 text-white"
-          :class="{ 'opacity-50': !oneSelected || isBaseline(oneSelected) }"
-          :disabled="!oneSelected || isBaseline(oneSelected)"
+          :class="{ 'opacity-50': !oneSelected }"
+          :disabled="!oneSelected"
           @click="onSetAsCurrent">
           Set Current
         </button>
@@ -45,18 +37,9 @@
         <i class="flex-shrink hbox all-center">
           <i
             :class="{
-              'text-purple-600': isBaseline(gameFolder),
               'text-green-600': isCurrent(gameFolder),
             }">
             {{ selectedFilter === 'All' ? gameFolder.shortPath : gameFolder.shorterPath }}
-          </i>
-          <i class="small-tag bg-purple-600 hbox all-center gap-2" v-if="isBaseline(gameFolder)">
-            B
-            <icon
-              v-if="!status.isBaselineSnapped"
-              name="camera"
-              class="text-xl transition-transform duration-200 hover:scale-125 cursor-pointer"
-              @click.prevent.stop="onBaselineSnapshot" />
           </i>
           <i class="small-tag bg-green-600" v-if="isCurrent(gameFolder)">C</i>
         </i>
@@ -73,13 +56,13 @@ import _ from 'lodash'
 import { ref, computed, onMounted } from 'vue'
 import { cookies } from 'brownies'
 import { configuration, status, checkStatuses } from '../store'
+import { toDuration } from '../utils/extensions'
 
 const FILTERS = 'All, Builder, Survivor, Sandbox'.split(', ')
 const selectedFilter = ref(cookies.filter || 'All')
 const gameFolders = ref([])
 const gameFoldersSelected = computed(() => gameFolders.value.filter(g => g.isSelected))
 const oneSelected = computed(() => (gameFoldersSelected.value.length === 1 ? gameFoldersSelected.value[0] : null))
-const isBaseline = game => configuration.value.baseline === game.path
 const isCurrent = game => configuration.value.current === game.path
 const deselectAll = () => gameFolders.value.forEach(g => (g.isSelected = false))
 
@@ -97,31 +80,16 @@ const gameFoldersFiltered = computed(() => {
     })
 })
 
-async function onSetAsBaseline() {
-  configuration.value.baseline = gameFoldersSelected.value[0].path
-
-  await saveConfig()
-}
-
 async function onSetAsCurrent() {
   configuration.value.current = gameFoldersSelected.value[0].path
 
   await saveConfig()
 }
 
-async function onBaselineSnapshot() {
-  trace('SNAP!', configuration.value.baseline)
-}
-
 async function onLoadGameFolders() {
   let { data } = await axios.get('/api/load-game-folders')
 
   const now = dayjs()
-  const toDuration = ms =>
-    dayjs //
-      .duration(now.diff(dayjs(ms)))
-      .format('D[d] HH:mm [ago]') // s[s]
-      .replace('0d ', '')
 
   data = data //
     .filter(d => !d.path.includes('Multiplayer'))
@@ -130,7 +98,7 @@ async function onLoadGameFolders() {
       shortPath: data.path.split('/Saves/').pop(),
       isSelected: false,
       date: _.mapValues(data.stat, ms => dayjs(ms).format('YYYY-MM-DD HH:mm:ss')),
-      ago: _.mapValues(data.stat, ms => toDuration(ms)),
+      ago: _.mapValues(data.stat, ms => toDuration(ms, now)),
     }))
 
   data = _.sortBy(data, 'stat.mtimeMs').reverse()

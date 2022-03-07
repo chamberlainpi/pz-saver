@@ -8,6 +8,11 @@ import axios from 'axios'
 
 globalThis.trace = console.log.bind(console)
 
+const PORT = process.env.PORT || 3000
+const clear = () => {
+  process.stdout.write('\u001b[2J\u001b[0;0H')
+}
+
 process.on('unhandledRejection', err => {
   console.log(err.toString().red)
 })
@@ -25,32 +30,20 @@ const state = {
 
 makeRoutesFromObj(fastify, createRoutes(state))
 
-//////////////////////////////////
 const TEST_API = axios.create({ baseURL: 'http://localhost:3000/' })
 
 ;(async () => {
   state.config = await tryLoadFile(state.YAML_CONFIG, { pzRoot: 'not-set' })
-  trace('YAML Config loaded:\n', state.config)
+  trace('YAML Config Successfully loaded:\n', state.config)
 
-  // const gameFolders = await axios.get('http://localhost:3000/load-game-folders')
-  // trace('Loaded gameFolders:', gameFolders.data)
-
-  const { data: statusData } = await TEST_API.get('/status')
-  trace('statusData:', statusData)
-
-  const { data: baselineData } = await TEST_API.post('/baseline-snapshot', {})
-  trace('baselineData:', baselineData)
-
-  // const { data: zipBackups } = await TEST_API.get('/backups')
-  // trace('zipBackups:', zipBackups)
-
-  // const { data: diffsData } = await TEST_API.get('/file-diffs-compare')
-  // trace('diffsData:', diffsData)
+  //Can make `TEST_API` calls here...
 })()
 
 fastify.ready(err => {
   if (err) throw err
 
+  clear()
+  trace('Fastify server ready on port:'.magenta, PORT)
   fastify.io.on('connection', socket => setupSocketIO(fastify.io, socket))
 })
 
@@ -60,4 +53,4 @@ function setupSocketIO(io, socket) {
   // })
 }
 
-fastify.listen(3000)
+fastify.listen(PORT)
