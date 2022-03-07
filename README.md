@@ -1,6 +1,8 @@
 Project Zomboid Saver
 =======================
 
+![PZ-Saver Compact](https://raw.githubusercontent.com/chamberlainpi/pz-saver/main/docs/pz-saver-compact.png)
+
 This is a node-based project to help maintain file-saves easier in Project Zomboid.
 
 This Webapp periodically takes "snapshots" ZIPs of your current game save folder.
@@ -17,11 +19,8 @@ You're leveling up your Carpentry XP like a boss building a giant wooden wall ar
 
 A Zombie pops out of nowhere and even though you fight back and put it out of it's misery... you know it's already too late - you're now **infected**, and you're gonna **DIE**! And that's not all... you're going to start from zero, nothing, zilch!
 
-# Until now!
+Well... **Until now!**
 
-Here's what PZ-Saver looks like in action:
-
-!(PZ-Saver Compact)[https://raw.githubusercontent.com/chamberlainpi/pz-saver/main/docs/pz-saver-compact.png]
 
 How to install / run it
 -----------------------
