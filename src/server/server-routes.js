@@ -7,6 +7,13 @@ import byteSize from 'byte-size'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
 
+const makeDatedZip = () => ({ zip: null, dateZippedMS: -1, name: 'no-name' })
+const ZIP_SNAPSHOTS = {
+  index: 0,
+  isSaving: false,
+  pair: [makeDatedZip(), makeDatedZip()],
+}
+
 async function saveData(data, uri) {
   const yamlStr = yaml.stringify(data)
 
@@ -110,6 +117,70 @@ export const createRoutes = state => ({
     state.baselineObjs = toPathObjects(baselineFiles, baseline)
 
     return { isOK: true, baselineObjs: state.baselineObjs != null }
+  },
+
+  'POST::/buffer-snapshot': async (req, res) => {
+    ///////////////////////////////////////////////////////////////////////////////////////
+    if (ZIP_SNAPSHOTS.isSaving) return { isError: 'Saving in progress, cannot buffer a snapshot' }
+
+    const { current } = state.config
+    const nowFormatted = dayjs().format('YYYY-MM-DD_HH-mm-ss')
+    const currentName = current.split('/').pop() + '__' + nowFormatted
+    const allFiles = await readdir(current, { depth: 5, bare: true, filterNoDir: true })
+
+    ZIP_SNAPSHOTS.index = 1 - ZIP_SNAPSHOTS.index
+
+    const currentSnapshot = ZIP_SNAPSHOTS.pair[ZIP_SNAPSHOTS.index]
+
+    const zip = (currentSnapshot.zip = new JSZip())
+    // currentSnapshot.allFiles = allFiles
+
+    const prettyMem = () => _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
+    const now = _.now()
+    // trace('process.memoryUsage() BEFORE', now, prettyMem())
+
+    for (var fullpath of allFiles) {
+      const relPath = fullpath.replace(current + '/', '')
+      zip.file(relPath, fs.readFile(fullpath))
+      // trace('Zipping', relPath)
+    }
+
+    try {
+      gc()
+    } catch (err) {
+      console.log('Should run with V8 flag: --expose-gc')
+    }
+
+    currentSnapshot.dateZippedMS = now
+    currentSnapshot.name = currentName
+
+    trace('process.memoryUsage() AFTER', now, prettyMem())
+
+    const pair = ZIP_SNAPSHOTS.pair.map(p => _.omit(p, 'zip'))
+    return { isBuffered: true, pair }
+  },
+
+  'POST::/buffer-write-current': async (req, res) => {
+    ZIP_SNAPSHOTS.isBusy = true
+    const currentSnapshot = ZIP_SNAPSHOTS.pair[ZIP_SNAPSHOTS.index]
+
+    const prom = new Promise(_then => {
+      const { zip, name } = currentSnapshot
+      const outFile = state.ZIP_SNAPSHOT.replace('[name]', name)
+
+      zip
+        .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
+        .pipe(fs.createWriteStream(outFile))
+        .on('finish', () => {
+          trace('ZIP finished current: ', outFile)
+          ZIP_SNAPSHOTS.isBusy = false
+          _then(true)
+        })
+    })
+
+    const result = await prom
+
+    return { isZipped: result }
   },
 
   'POST::/save-snapshot': async (req, res) => {

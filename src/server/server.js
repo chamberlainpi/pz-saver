@@ -41,8 +41,8 @@ const TEST_API = axios.create({ baseURL: 'http://localhost:3000/' })
   const { data: baselineData } = await TEST_API.post('/baseline-snapshot', {})
   trace('baselineData:', baselineData)
 
-  const { data: zipBackups } = await TEST_API.get('/backups')
-  trace('zipBackups:', zipBackups)
+  // const { data: zipBackups } = await TEST_API.get('/backups')
+  // trace('zipBackups:', zipBackups)
 
   // const { data: diffsData } = await TEST_API.get('/file-diffs-compare')
   // trace('diffsData:', diffsData)

@@ -1,14 +1,6 @@
 <template>
   <div class="game-folders panel">
-    <div class="hbox items-center w-full text-2xl">
-      <i class="font-bold">Filters:</i>
-      <label v-for="filter in FILTERS" :key="filter" class="px-2 btn nowrap">
-        <input type="radio" :value="filter" v-model="selectedFilter" />
-        {{ filter }}
-      </label>
-    </div>
-
-    <div class="hbox all-center font-bold mb-3">
+    <div class="hbox all-center font-bold">
       <h1 class="nowrap"><icon name="folder-open p-2" />Folders</h1>
 
       <div class="ml-auto">
@@ -37,6 +29,14 @@
           Refresh
         </button>
       </div>
+    </div>
+
+    <div class="hbox items-center w-full text-2xl px-2">
+      <i class="font-bold">Filters:</i>
+      <label v-for="filter in FILTERS" :key="filter" class="px-2 btn nowrap">
+        <input type="radio" :value="filter" v-model="selectedFilter" />
+        {{ filter }}
+      </label>
     </div>
 
     <div v-for="gameFolder in gameFoldersFiltered" :key="gameFolder.path">
