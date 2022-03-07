@@ -82,7 +82,7 @@ export const createRoutes = state => ({
     console.clear()
 
     const writeFileOrFolder = async ({ relPath, file }) => {
-      const absPath = path.join(state.config.current + '\\test', relPath)
+      const absPath = path.join(state.config.current, relPath)
 
       if (absPath.endsWith('\\') && !fs.existsSync(absPath)) {
         trace('Make dir: '.yellow, relPath)
