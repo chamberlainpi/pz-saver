@@ -6,6 +6,7 @@ import App from './App.vue'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import axios from 'axios'
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)

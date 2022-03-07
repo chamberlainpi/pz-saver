@@ -80,7 +80,7 @@ async function autoSnapshot() {
   isSnapping.value = true
   TweenMax.set('#progress', { width: '100%' })
 
-  let { data } = await axios.post('/api/buffer-snapshot')
+  let { data } = await axios.post('/buffer-snapshot')
   snapshotPairs.value = _.sortBy(data.pair, 'dateZippedMS')
   trace(snapshotPairs.value.map(p => p.name).join('\n'))
 
@@ -95,7 +95,7 @@ async function autoSnapshot() {
 
 async function onSaveBufferNow(which) {
   errorMessage.value = ''
-  let { data } = await axios.post('/api/buffer-write-current', { which })
+  let { data } = await axios.post('/buffer-write-current', { which })
   if (data.isError) {
     errorMessage.value = data.isError
     setTimeout(() => (errorMessage.value = ''), 3000)

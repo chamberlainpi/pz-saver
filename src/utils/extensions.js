@@ -4,6 +4,10 @@ import dayjs from 'dayjs'
 
 globalThis.trace = console.log.bind(console)
 
+if (import.meta.env.MODE === 'development') {
+  axios.defaults.baseURL = 'http://localhost:3333/api'
+}
+
 export const wait = duration => new Promise(_then => setTimeout(_then, duration))
 export const waitUntil = getter =>
   new Promise(_then => {

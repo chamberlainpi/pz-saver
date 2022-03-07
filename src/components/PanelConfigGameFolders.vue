@@ -87,7 +87,7 @@ async function onSetAsCurrent() {
 }
 
 async function onLoadGameFolders() {
-  let { data } = await axios.get('/api/load-game-folders')
+  let { data } = await axios.get('/load-game-folders')
 
   const now = dayjs()
 

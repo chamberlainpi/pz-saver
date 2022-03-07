@@ -45,7 +45,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from '@vue/runtime-c
 import { axiosRef, fixSlash, wait, waitUntil, toDuration } from './utils/extensions'
 import { cookies } from 'brownies'
 import { shake } from './utils/fx'
-import socket from './socket'
 import _ from 'lodash'
 import axios from 'axios'
 import { configuration, status } from './store'

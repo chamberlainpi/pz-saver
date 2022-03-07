@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "pz": "node --expose-gc ./src/server/server.js",
     "server": "nodemon -w src/server --exec \"node --expose-gc ./src/server/server.js\""
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "fastify": "^3.27.2",
     "fastify-cors": "^6.0.3",
     "fastify-socket.io": "^3.0.0",
+    "fastify-static": "^4.5.0",
     "fs-extra": "^10.0.1",
     "jszip": "^3.7.1",
     "lodash": "^4.17.21",

@@ -31,18 +31,18 @@ import axios from 'axios'
 const backups = ref([])
 
 async function updateBackupsList() {
-  let { data } = await axios.get('/api/backups')
+  let { data } = await axios.get('/backups')
 
   backups.value = data
 }
 
 async function onSnapshotRestore(zipFile) {
-  let { data } = await axios.put('/api/backup-restore/' + zipFile.key)
+  let { data } = await axios.put('/backup-restore/' + zipFile.key)
   trace(data)
 }
 
 async function onSnapshotDelete(zipFile) {
-  let { data } = await axios.delete('/api/backup-delete/' + zipFile.key)
+  let { data } = await axios.delete('/backup-delete/' + zipFile.key)
   trace(data)
 
   await updateBackupsList()

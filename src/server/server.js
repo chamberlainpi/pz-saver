@@ -1,10 +1,11 @@
 import { makeRoutesFromObj, tryLoadFile } from './sv-extensions.js'
 import Fastify from 'fastify'
-import FastifyIO from 'fastify-socket.io'
+import FastifyStatic from 'fastify-static'
 import 'colors'
 import _ from 'lodash'
 import { createRoutes } from './server-routes.js'
 import axios from 'axios'
+import path from 'path'
 
 globalThis.trace = console.log.bind(console)
 
@@ -17,16 +18,17 @@ process.on('unhandledRejection', err => {
   console.log(err.toString().red)
 })
 
-const fastify = Fastify()
-fastify.register(FastifyIO, { cors: { origin: '*' } }) //Options for socket.io
-
 const state = {
   YAML_CONFIG: '.private/pzconfig.yaml',
   YAML_BASELINE: '.private/[name].baseline.yaml',
   PRIVATE_DIR: '.private',
+  DIST: path.join(process.cwd(), '/dist'),
   ZIP_SNAPSHOT: '.private/[name].snap.zip',
   config: {},
 }
+
+const fastify = Fastify()
+fastify.register(FastifyStatic, { root: state.DIST })
 
 makeRoutesFromObj(fastify, createRoutes(state))
 
@@ -44,13 +46,6 @@ fastify.ready(err => {
 
   clear()
   trace('Fastify server ready on port:'.magenta, PORT)
-  fastify.io.on('connection', socket => setupSocketIO(fastify.io, socket))
 })
-
-function setupSocketIO(io, socket) {
-  // socket.on('pz:setPZRoot', pzRoot => {
-  //   trace('Setting PZ Root', pzRoot)
-  // })
-}
 
 fastify.listen(PORT)
