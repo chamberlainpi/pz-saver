@@ -1,18 +1,16 @@
 <template>
-  <div class="periodic-snapshot mt-3 panel border-red-600border border-red-500">
+  <div class="timed-snapshot mt-3 panel border-red-600border border-red-500">
     <div class="hbox items-center pb-4">
-      <h1 class="mr-4"><icon name="camera p-2" />Periodic Snapshot</h1>
+      <h1 class="mr-4"><icon name="camera p-2" />Timed Snapshot</h1>
 
       <div class="hbox items-center ml-auto">
-        <template v-if="!isCompact">
-          <i
-            class="b px-1 border rounded-md border-transparent transition-colors duration-200"
-            :class="{ 'border-green-700': isPZRunning && isAutoStart }">
-            Auto-Start
-          </i>
-          <ToggleButton v-model="isAutoStart" />
-        </template>
-        <i class="b">Enabled</i>
+        <i
+          class="b px-1 border rounded-md border-transparent transition-colors duration-200"
+          :class="{ 'border-green-700': isPZRunning && isAutoStart }">
+          Auto-Start
+        </i>
+        <ToggleButton v-model="isAutoStart" />
+        <i class="b ml-3">Enabled</i>
         <ToggleButton v-model="isEnabled" />
       </div>
     </div>
@@ -33,20 +31,28 @@
       </label>
     </div>
 
-    <button class="btn w-full h-48 bg-red-900 text-white vbox all-center" @click="onSaveBufferNow('prev')">
-      <i>SAVE PREVIOUS</i>
-      <i class="text-xs opacity-50">I've just been bitten / died / lost all my XP and I don't like it!</i>
-      <i class="text-xs opacity-50">{{
-        hasEnoughSnaps ? toDuration(snapshotPairs[0].dateZippedMS) : '[not ready yet]'
-      }}</i>
-    </button>
-    <button class="btn w-full h-20 bg-green-900 text-white vbox all-center" @click="onSaveBufferNow('now')">
-      <i>SAVE NOW!</i>
-      <i class="text-xs opacity-50">I'm satisfied with my progress and wish to save now.</i>
-      <i class="text-xs opacity-50">{{
-        hasEnoughSnaps ? toDuration(snapshotPairs[1].dateZippedMS) : '[not ready yet]'
-      }}</i>
-    </button>
+    <div :class="isCompact ? 'hbox' : 'vbox'">
+      <button
+        class="btn w-full bg-red-900 text-white vbox all-center"
+        :class="isCompact ? 'h-28' : 'h-48'"
+        @click="onSaveBufferNow('prev')">
+        <i>SAVE PREVIOUS</i>
+        <i class="text-xs opacity-50">I've just been bitten / died / lost all my XP and I don't like it!</i>
+        <i class="text-xs opacity-50">{{
+          hasEnoughSnaps ? toDuration(snapshotPairs[0].dateZippedMS) : '[not ready yet]'
+        }}</i>
+      </button>
+      <button
+        class="btn w-full bg-green-900 text-white vbox all-center"
+        :class="isCompact ? 'h-28' : 'h-20'"
+        @click="onSaveBufferNow('now')">
+        <i>SAVE NOW!</i>
+        <i class="text-xs opacity-50">I'm satisfied with my progress and wish to save now.</i>
+        <i class="text-xs opacity-50">{{
+          hasEnoughSnaps ? toDuration(snapshotPairs[1].dateZippedMS) : '[not ready yet]'
+        }}</i>
+      </button>
+    </div>
     <i class="border-4 border-double border-red-600 p-2" v-if="errorMessage">
       {{ errorMessage }}
     </i>
@@ -56,7 +62,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from '@vue/runtime-core'
 import { toDuration } from '../utils/extensions'
-import { configuration, status, checkStatuses } from '../store'
+import { configuration, status, checkStatuses, isCompact } from '../store'
 import _ from 'lodash'
 import axios from 'axios'
 import { cookies } from 'brownies'
@@ -78,9 +84,6 @@ watch(isPZRunning, bool => updateEnabled(bool))
 const updateEnabled = bool => isAutoStart.value && (isEnabled.value = bool)
 
 const emit = defineEmits()
-const props = defineProps({
-  isCompact: Boolean,
-})
 
 watch(isEnabled, bool => {
   autoSnapshot()

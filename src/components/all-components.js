@@ -2,14 +2,14 @@ import _ from 'lodash'
 import icon from './icon.vue'
 import ToggleButton from './ToggleButton.vue'
 import PanelConfigGameFolders from './PanelConfigGameFolders.vue'
-import PanelPeriodicSnapshot from './PanelPeriodicSnapshot.vue'
+import PanelTimedSnapshot from './PanelTimedSnapshot.vue'
 import PanelSavedSnapshots from './PanelSavedSnapshots.vue'
 
 // Man do we ever need wildcard * imports in JS.....FUUUUUUUUU@#$%&^^%&!!!
 const AllComps = {
   icon,
   PanelConfigGameFolders,
-  PanelPeriodicSnapshot,
+  PanelTimedSnapshot,
   PanelSavedSnapshots,
   ToggleButton,
 }

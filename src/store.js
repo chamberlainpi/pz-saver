@@ -1,5 +1,6 @@
 import axios from 'axios'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { cookies } from 'brownies'
 import { axiosRef } from './utils/extensions'
 
 export const configuration = axiosRef({ pzRoot: '' }, '/config')
@@ -22,3 +23,7 @@ export async function checkStatuses() {
 
   setTimeout(checkStatuses, 3000)
 }
+
+export const isCompact = ref(cookies.isCompact ?? true)
+
+watch(isCompact, bool => (cookies.isCompact = bool))

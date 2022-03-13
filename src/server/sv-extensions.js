@@ -4,6 +4,8 @@ import path from 'path'
 import yaml from 'yaml'
 import { exec } from 'child_process'
 
+export const wait = duration => new Promise(_then => setTimeout(_then, duration))
+
 export async function readdir(rootDir, opts = {}) {
   opts = _.defaults(opts, { depth: 1, private: false, nodir: true })
 

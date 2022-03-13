@@ -2,10 +2,10 @@ import fs from 'fs-extra'
 import _ from 'lodash'
 import path from 'path'
 import yaml from 'yaml'
-import { isProcessRunning, readdir } from './sv-extensions.js'
-import byteSize from 'byte-size'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
+import byteSize from 'byte-size'
+import { isProcessRunning, readdir, wait } from './sv-extensions.js'
 
 const makeDatedZip = () => ({ zip: null, dateZippedMS: -1, name: 'no-name' })
 const ZIP_SNAPSHOTS = {
@@ -109,6 +109,16 @@ export const createRoutes = state => ({
     return { ok: 1, zip: zipInfo.value }
   },
 
+  'PUT::/backup-test/:id': async (req, res) => {
+    const zipInfo = state.zipFiles[req.params.id]
+
+    if (!zipInfo) return { isError: 'Zip does not exists' }
+
+    await wait(2000)
+
+    return { isTested: true }
+  },
+
   'DELETE::/backup-delete/:id': async (req, res) => {
     const zipInfo = state.zipFiles[req.params.id]
 
@@ -139,9 +149,26 @@ export const createRoutes = state => ({
       return JSON.stringify(memResults).replace(/[{}"]/g, '').replace(/,/g, ', ')
     }
 
-    for (var fullpath of allFiles) {
-      const relPath = fullpath.replace(current + '/', '')
-      zip.file(relPath, fs.readFile(fullpath))
+    const allChunkedFiles = _.chunk(allFiles, 500)
+
+    for (var chunkedFiles of allChunkedFiles) {
+      const chunkedPromises = []
+
+      for (var fullpath of chunkedFiles) {
+        const relPath = fullpath.replace(current + '/', '')
+        chunkedPromises.push(async () => ({
+          relPath,
+          fullpath,
+          buffer: await fs.readFile(fullpath),
+        }))
+      }
+
+      const chunkedBuffers = await Promise.all(chunkedPromises.map(prom => prom()))
+      process.stdout.write('.')
+
+      for (var chunkedBuff of chunkedBuffers) {
+        zip.file(chunkedBuff.relPath, chunkedBuff.buffer)
+      }
     }
 
     try {
@@ -152,7 +179,7 @@ export const createRoutes = state => ({
     currentSnapshot.dateZippedMS = _.now()
     currentSnapshot.name = currentName
 
-    trace('POST::/buffer-snapshot:'.gray, `# files: ${allFiles.length}\n  ${prettyMem().yellow}`)
+    trace('\n POST::/buffer-snapshot:'.gray, `# files: ${allFiles.length}\n  ${prettyMem().yellow}`)
 
     const pair = ZIP_SNAPSHOTS.pair.map(p => _.omit(p, 'zip'))
     return { isBuffered: true, pair }

@@ -31,13 +31,9 @@
         </div>
 
         <template v-if="configuration.pzRoot">
-          <PanelPeriodicSnapshot
-            ref="panelPeriodicSnapshot"
-            :config="configuration"
-            @save-buffer="onSnapshotSaved"
-            :isCompact="isCompact" />
+          <PanelTimedSnapshot ref="panelTimedSnapshot" :config="configuration" @save-buffer="onSnapshotSaved" />
           <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" v-if="!isCompact" />
-          <PanelSavedSnapshots ref="panelSavedSnapshots" v-if="!isCompact" />
+          <PanelSavedSnapshots ref="panelSavedSnapshots" />
         </template>
       </div>
     </div>
@@ -51,15 +47,12 @@ import { cookies } from 'brownies'
 import { shake } from './utils/fx'
 import _ from 'lodash'
 import axios from 'axios'
-import { configuration, status } from './store'
+import { configuration, status, isCompact } from './store'
 
 const panelConfigGameFolders = ref(null)
 const panelFileDiffs = ref(null)
 const panelSavedSnapshots = ref(null)
-const panelPeriodicSnapshot = ref(null)
-const isCompact = ref(cookies.isCompact ?? true)
-
-watch(isCompact, bool => (cookies.isCompact = bool))
+const panelTimedSnapshot = ref(null)
 
 async function onSnapshotSaved() {
   if (!panelSavedSnapshots || !panelSavedSnapshots.value) return

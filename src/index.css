@@ -50,6 +50,10 @@
     .panel {
         @apply p-2 rounded-xl bg-purple-50
     }
+
+    .sml-btn {
+        @apply p-1
+    }
 }
 
 .for-mob { display: initial; }
