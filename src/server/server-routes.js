@@ -21,6 +21,11 @@ async function saveData(data, uri) {
   return { isOK: true, data }
 }
 
+const prettyMem = () => {
+  const memResults = _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
+  return JSON.stringify(memResults).replace(/[{}"]/g, '').replace(/,/g, ', ')
+}
+
 export const createRoutes = state => ({
   'GET::/config': (req, res) => [state.config],
 
@@ -143,24 +148,20 @@ export const createRoutes = state => ({
     const currentSnapshot = ZIP_SNAPSHOTS.pair[ZIP_SNAPSHOTS.index]
 
     const zip = (currentSnapshot.zip = new JSZip())
-
-    const prettyMem = () => {
-      const memResults = _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
-      return JSON.stringify(memResults).replace(/[{}"]/g, '').replace(/,/g, ', ')
-    }
-
     const allChunkedFiles = _.chunk(allFiles, 500)
 
     for (var chunkedFiles of allChunkedFiles) {
       const chunkedPromises = []
 
       for (var fullpath of chunkedFiles) {
-        const relPath = fullpath.replace(current + '/', '')
-        chunkedPromises.push(async () => ({
-          relPath,
-          fullpath,
-          buffer: await fs.readFile(fullpath),
-        }))
+        ;(fullpath => {
+          const relPath = fullpath.replace(current + '/', '')
+          chunkedPromises.push(async () => ({
+            relPath,
+            fullpath,
+            buffer: await fs.readFile(fullpath),
+          }))
+        })(fullpath)
       }
 
       const chunkedBuffers = await Promise.all(chunkedPromises.map(prom => prom()))
