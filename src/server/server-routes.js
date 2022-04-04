@@ -6,6 +6,7 @@ import JSZip from 'jszip'
 import dayjs from 'dayjs'
 import byteSize from 'byte-size'
 import { isProcessRunning, readdir, wait } from './sv-extensions.js'
+import ora from 'ora'
 
 const makeDatedZip = () => ({ zip: null, dateZippedMS: -1, name: 'no-name' })
 const ZIP_SNAPSHOTS = {
@@ -68,9 +69,29 @@ export const createRoutes = state => ({
   },
 
   'PUT::/backup-restore/:id': async (req, res) => {
+    if (state.isRestoring) return { isError: 'Restoring in progress' }
+
     const zipInfo = state.zipFiles[req.params.id]
 
     if (!zipInfo) return { isError: 'Zip does not exists' }
+
+    state.isRestoring = true
+
+    const spinner = ora().start()
+    spinner.color = 'gray'
+
+    const STATUS = (str, color = 'gray') => {
+      spinner.color = color
+      spinner.text = `Backup Restoring: ${str}`
+    }
+
+    STATUS('Deleting previous content...')
+
+    await wait(1000)
+
+    await fs.emptyDir(state.config.current)
+
+    STATUS('Loading ZIP content...')
 
     const zipContent = await fs.readFile(zipInfo.value)
     const zip = await JSZip.loadAsync(zipContent)
@@ -81,31 +102,35 @@ export const createRoutes = state => ({
       allWriteOperations.push({ relPath, file })
     })
 
+    var fileCount = 0
+
     const errors = []
     const writeFileOrFolder = async ({ relPath, file }) => {
       const absPath = path.join(state.config.current, relPath)
       const exists = fs.existsSync(absPath)
+
       try {
         if (absPath.endsWith('\\')) {
           if (!exists) {
             await fs.mkdirp(absPath)
-            //process.stdout.write('|')
-          } else {
-            //process.stdout.write('_')
           }
         } else {
           const buff = await file.async('nodebuffer')
           await fs.writeFile(absPath, buff)
-          //process.stdout.write('.')
         }
       } catch (err) {
         errors.push('Could not write: ' + absPath + ' ' + exists)
-        //process.stdout.write('X'.red)
       }
     }
 
-    await Promise.all(allWriteOperations.map(writeFileOrFolder))
-    trace(`\nWrote ${allWriteOperations.length} files & folders over saved game.`)
+    for (var writeOp of allWriteOperations) {
+      fileCount++
+      STATUS(`Writing files & folders... ${fileCount}/${allWriteOperations.length}`)
+      await writeFileOrFolder(writeOp)
+    }
+
+    state.isRestoring = false
+    spinner.succeed(`Restored ${allWriteOperations.length} files & folders.`)
 
     if (errors.length) {
       trace(errors.join('\n').red)
@@ -115,6 +140,8 @@ export const createRoutes = state => ({
   },
 
   'PUT::/backup-test/:id': async (req, res) => {
+    if (state.isRestoring) return { isError: 'Restoring in progress' }
+
     const zipInfo = state.zipFiles[req.params.id]
 
     if (!zipInfo) return { isError: 'Zip does not exists' }
@@ -125,6 +152,8 @@ export const createRoutes = state => ({
   },
 
   'DELETE::/backup-delete/:id': async (req, res) => {
+    if (state.isRestoring) return { isError: 'Restoring in progress' }
+
     const zipInfo = state.zipFiles[req.params.id]
 
     if (!zipInfo) return { isError: 'Zip does not exists' }
@@ -136,6 +165,7 @@ export const createRoutes = state => ({
 
   'POST::/buffer-snapshot': async (req, res) => {
     ///////////////////////////////////////////////////////////////////////////////////////
+    if (state.isRestoring) return { isError: 'Restoring in progress' }
     if (ZIP_SNAPSHOTS.isSaving) return { isError: 'Saving in progress, cannot buffer a snapshot' }
 
     const { current } = state.config
@@ -187,6 +217,7 @@ export const createRoutes = state => ({
   },
 
   'POST::/buffer-write-current': async (req, res) => {
+    if (state.isRestoring) return { isError: 'Restoring in progress' }
     if (ZIP_SNAPSHOTS.isSaving) return { isError: 'Already busy writing ZIP file.' }
     ZIP_SNAPSHOTS.isSaving = true
 
@@ -207,12 +238,12 @@ export const createRoutes = state => ({
         .pipe(fs.createWriteStream(outFile))
         .on('finish', () => {
           trace('ZIP finished current: ', outFile)
-          ZIP_SNAPSHOTS.isSaving = false
           _then(true)
         })
     })
 
     const result = await prom
+    ZIP_SNAPSHOTS.isSaving = false
 
     return { isZipped: result }
   },
