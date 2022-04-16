@@ -32,7 +32,7 @@ fastify.register(FastifyStatic, { root: state.DIST })
 
 makeRoutesFromObj(fastify, createRoutes(state))
 
-const TEST_API = axios.create({ baseURL: 'http://localhost:3000/' })
+const TEST_API = axios.create({ baseURL: `http://localhost:${PORT}/` })
 
 ;(async () => {
   state.config = await tryLoadFile(state.YAML_CONFIG, { pzRoot: 'not-set' })

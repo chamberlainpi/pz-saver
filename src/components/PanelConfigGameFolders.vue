@@ -55,7 +55,7 @@ import dayjs from 'dayjs'
 import _ from 'lodash'
 import { ref, computed, onMounted } from 'vue'
 import { cookies } from 'brownies'
-import { configuration, status, checkStatuses } from '../store'
+import { configuration, status, checkStatuses, saveConfig } from '../store'
 import { toDuration } from '../utils/extensions'
 
 const FILTERS = 'All, Builder, Survivor, Sandbox'.split(', ')

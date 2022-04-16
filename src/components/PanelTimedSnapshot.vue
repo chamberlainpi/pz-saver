@@ -5,9 +5,10 @@
 
       <div class="hbox items-center ml-auto">
         <i
-          class="b px-1 border rounded-md border-transparent transition-colors duration-200"
-          :class="{ 'border-green-700': isPZRunning && isAutoStart }">
+          class="b px-2 py-1 border rounded-md border-transparent transition-colors duration-200"
+          :class="{ 'border-green-500': isPZRunning }">
           Auto-Start
+          <icon name="circle" :class="[isPZRunning ? 'animate-pulse text-green-500' : 'text-gray-500 opacity-50']" />
         </i>
         <ToggleButton v-model="isAutoStart" />
         <i class="b ml-3">Enabled</i>
