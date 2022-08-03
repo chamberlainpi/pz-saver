@@ -26,11 +26,6 @@
             <icon name="trash" />
             <i v-if="!isCompact" class="ml-1">Delete</i>
           </button>
-
-          <!-- <button class="btn bg-red-600 text-white" :class="{ 'sml-btn': isCompact }" @click="onSnapshotTest(zipFile)">
-            <icon name="plus" />
-            <i v-if="!isCompact" class="ml-1">Test</i>
-          </button> -->
         </div>
       </div>
     </div>
@@ -74,15 +69,6 @@ async function onSnapshotDelete(zipFile) {
   trace(data)
 
   await updateBackupsList()
-  isBusy.value = false
-}
-
-async function onSnapshotTest(zipFile) {
-  if (isBusy.value) return
-  isBusy.value = true
-
-  let { data } = await axios.put('/backup-test/' + zipFile.key)
-  trace(data)
   isBusy.value = false
 }
 

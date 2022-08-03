@@ -2,6 +2,7 @@ import _ from 'lodash'
 import fs from 'fs-extra'
 import path from 'path'
 import yaml from 'yaml'
+import byteSize from 'byte-size'
 import { exec } from 'child_process'
 
 export const wait = duration => new Promise(_then => setTimeout(_then, duration))
@@ -77,11 +78,24 @@ export async function tryLoadFile(uri, fallbackData) {
   return yaml.parse(data)
 }
 
+export async function saveData(data, uri) {
+  const yamlStr = yaml.stringify(data)
+
+  await fs.writeFile(uri, yamlStr, 'utf8')
+  return { isOK: true, data }
+}
+
+export const prettyMem = () => {
+  const memResults = _.mapValues(process.memoryUsage(), v => byteSize(v).toString())
+  return JSON.stringify(memResults).replace(/[{}"]/g, '').replace(/,/g, ', ')
+}
+
 const OS_PROCESS_RUNNING = {
   win32: `tasklist`,
   darwin: `ps -ax | grep $PROC`,
   linux: `ps -A`,
 }
+
 export async function isProcessRunning(names) {
   if (_.isString(names)) {
     names = { win32: names, darwin: names, linux: names }

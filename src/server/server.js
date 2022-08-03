@@ -3,7 +3,7 @@ import Fastify from 'fastify'
 import FastifyStatic from 'fastify-static'
 import 'colors'
 import _ from 'lodash'
-import { createRoutes } from './server-routes.js'
+import { createRoutes } from './sv-routes.js'
 import axios from 'axios'
 import path from 'path'
 
