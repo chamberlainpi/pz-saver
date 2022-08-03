@@ -102,14 +102,21 @@ export async function isProcessRunning(names) {
   }
 
   const { platform } = process
-  const processName = names[platform].toLowerCase()
+  const processName = names[platform]
+
   const cmd = !(platform in OS_PROCESS_RUNNING) ? false : OS_PROCESS_RUNNING[platform].replace('$PROC', processName)
 
   return new Promise((_then, _catch) => {
     exec(cmd, (err, stdout, stderr) => {
       if (err) _catch(err)
 
-      _then(stdout.toLowerCase().includes(processName))
+      const lines = stdout.split('\n')
+      const linesNonGrep = lines.filter(line => line.trim().length > 0 && !line.includes(' grep '))
+      const isProcessActive = linesNonGrep.some(
+        line => line.includes(processName) || line.toLowerCase().includes(processName.toLowerCase())
+      )
+
+      _then(isProcessActive)
     })
   })
 }
