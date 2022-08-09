@@ -7,7 +7,7 @@ export const configuration = axiosRef({ pzRoot: '' }, '/config')
 
 export async function saveConfig() {
   const { data } = await axios.post('/config', configuration.value)
-  trace(data)
+  return data
 }
 
 export async function setConfig() {

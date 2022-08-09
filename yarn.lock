@@ -2073,6 +2073,11 @@ void-elements@^3.1.0:
   resolved "https://registry.yarnpkg.com/void-elements/-/void-elements-3.1.0.tgz#614f7fbf8d801f0bb5f0661f5b2f5785750e4f09"
   integrity sha1-YU9/v42AHwu18GYfWy9XhXUOTwk=
 
+vue-select@^3.20.0:
+  version "3.20.0"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.20.0.tgz#a3c4eb046654f9991ce5240e3a0679daa9e992d3"
+  integrity sha512-Qau4BzpgAC+/9jM5oTlOrfA81ONdtTFH6PqeSDKvIB56f1F6EbIR8qAotpUxrIiNVppyPFjvVDkyriMfHjWBQA==
+
 vue@^3.2.25:
   version "3.2.31"
   resolved "https://registry.yarnpkg.com/vue/-/vue-3.2.31.tgz#e0c49924335e9f188352816788a4cca10f817ce6"

@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import fs from 'fs-extra'
-import { isProcessRunning, readdir, saveData } from './sv-extensions.js'
+import { isProcessRunning, readdir, saveData, prettyMem } from './sv-extensions.js'
 import { restoreFromZIP } from './sv-restoreFromZIP.js'
 import { bufferSnapshotToMemory } from './sv-bufferSnapshotToMemory.js'
 import { bufferSnapshotWriteToFile } from './sv-bufferSnapshotWriteToFile.js'
@@ -85,7 +85,8 @@ export const createRoutes = STATE => ({
 
     const { current } = STATE.config
 
-    await bufferSnapshotToMemory(current, currentSnapshot)
+    const { allFiles } = await bufferSnapshotToMemory(current, currentSnapshot)
+    trace('\n POST::/buffer-snapshot:'.gray, `# files: ${allFiles.length}\n  ${prettyMem().yellow}`)
 
     const pair = ZIP_SNAPSHOTS.pair.map(p => _.omit(p, 'zip'))
     return { isBuffered: true, pair }
@@ -95,8 +96,25 @@ export const createRoutes = STATE => ({
     if (STATE.isRestoring) return { isError: 'Restoring in progress' }
     if (STATE.isSaving) return { isError: 'Already busy writing ZIP file.' }
 
-    const index = req.body.which === 'now' ? ZIP_SNAPSHOTS.index : 1 - ZIP_SNAPSHOTS.index
-    const currentSnapshot = ZIP_SNAPSHOTS.pair[index]
+    let currentSnapshot
+    switch (req.body.which) {
+      case 'newest':
+        currentSnapshot = ZIP_SNAPSHOTS.pair[ZIP_SNAPSHOTS.index]
+        break
+      case 'oldest':
+        currentSnapshot = ZIP_SNAPSHOTS.pair[1 - ZIP_SNAPSHOTS.index]
+        break
+      case 'instantly':
+        currentSnapshot = makeDatedZip()
+
+        const { allFiles } = await bufferSnapshotToMemory(STATE.config.current, currentSnapshot)
+
+        trace('\n [INSTANT SNAPSHOT]:'.gray, `# files: ${allFiles.length}\n  ${prettyMem().yellow}`)
+        break
+
+      default:
+        return { isError: `Unhandled buffer type: ${req.body.which}` }
+    }
 
     return await bufferSnapshotWriteToFile(currentSnapshot, STATE)
   },

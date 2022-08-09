@@ -10,9 +10,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
-        // cors: false,
         changeOrigin: true,
-        // ws: true, ////////////////////
         rewrite: p => p.replace(/^\/api/, ''),
       },
     },

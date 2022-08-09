@@ -32,7 +32,7 @@
 
         <template v-if="configuration.pzRoot">
           <PanelTimedSnapshot ref="panelTimedSnapshot" :config="configuration" @save-buffer="onSnapshotSaved" />
-          <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" v-if="!isCompact" />
+          <PanelConfigGameFolders ref="panelConfigGameFolders" :config="configuration" />
           <PanelSavedSnapshots ref="panelSavedSnapshots" />
         </template>
       </div>

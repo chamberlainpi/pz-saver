@@ -6,13 +6,13 @@
 
     <div
       class="backup-list vbox border border-gray-300 rounded-md my-1"
-      :class="[isCompact ? 'text-sm grid grid-cols-3 p-1' : 'p-3', { 'opacity-50': isBusy }]">
-      <div v-for="zipFile in backupsTrimmed" :key="zipFile.key" class="hbox all-center">
-        <i class="break-words">{{ cleanFilename(zipFile.value) }}</i>
+      :class="[isCompact ? 'text-md grid grid-cols-3 p-1' : 'p-3', { 'opacity-50': isBusy }]">
+      <div v-for="zipFile in backupsTrimmed" :key="zipFile.key" class="vbox all-center">
+        <i class="break-words">{{ zipFile.cleanName }}</i>
 
-        <div class="backup-buttons" :class="{ 'ml-auto': !isCompact }">
+        <div class="backup-buttons text-2xl" :class="{ 'ml-auto': !isCompact }">
           <button
-            class="btn bg-blue-600 text-white"
+            class="btn bg-blue-600 text-white p-3"
             :class="{ 'sml-btn': isCompact }"
             @click="onSnapshotRestore(zipFile)">
             <icon name="trash-arrow-up" />
@@ -20,7 +20,7 @@
           </button>
 
           <button
-            class="btn bg-red-600 text-white"
+            class="btn bg-red-600 text-white p-3"
             :class="{ 'sml-btn': isCompact }"
             @click="onSnapshotDelete(zipFile)">
             <icon name="trash" />
@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+import _ from 'lodash'
 import { ref, computed } from 'vue'
 import { isCompact } from '../store'
 import axios from 'axios'
@@ -49,7 +50,9 @@ const cleanFilename = filename => {
 async function updateBackupsList() {
   let { data } = await axios.get('/backups')
 
-  backups.value = data
+  data.forEach(zip => (zip.cleanName = cleanFilename(zip.value)))
+
+  backups.value = _.sortBy(data, 'cleanName')
 }
 
 async function onSnapshotRestore(zipFile) {

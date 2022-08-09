@@ -2,7 +2,7 @@ import _ from 'lodash'
 import fs from 'fs-extra'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
-import { prettyMem, readdir } from './sv-extensions.js'
+import { readdir } from './sv-extensions.js'
 
 export async function bufferSnapshotToMemory(current, snapshot) {
   const nowFormatted = dayjs().format('YYYY-MM-DD_HH-mm-ss')
@@ -45,5 +45,5 @@ export async function bufferSnapshotToMemory(current, snapshot) {
   snapshot.dateZippedMS = _.now()
   snapshot.name = currentName
 
-  trace('\n POST::/buffer-snapshot:'.gray, `# files: ${allFiles.length}\n  ${prettyMem().yellow}`)
+  return { allFiles }
 }

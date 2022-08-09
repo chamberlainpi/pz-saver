@@ -29,6 +29,9 @@ const state = {
 
 const fastify = Fastify()
 fastify.register(FastifyStatic, { root: state.DIST })
+fastify.addHook('onError', async (request, reply, error) => {
+  trace('Server Error!'.red, error)
+})
 
 makeRoutesFromObj(fastify, createRoutes(state))
 

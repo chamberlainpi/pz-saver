@@ -32,26 +32,34 @@
       </label>
     </div>
 
-    <div :class="isCompact ? 'hbox' : 'vbox'">
+    <div class="hbox">
       <button
-        class="btn w-full bg-red-900 text-white vbox all-center"
-        :class="isCompact ? 'h-28' : 'h-48'"
-        @click="onSaveBufferNow('prev')">
+        class="btn w-full bg-red-900 text-white vbox all-center h-20"
+        @click="onSaveBuffer('oldest')"
+        title="Create a ZIP based on the oldest snapshot.">
         <i>SAVE PREVIOUS</i>
-        <i class="text-xs opacity-50">I've just been bitten / died / lost all my XP and I don't like it!</i>
-        <i class="text-xs opacity-50">{{
-          hasEnoughSnaps ? toDuration(snapshotPairs[0].dateZippedMS) : '[not ready yet]'
+        <i class="text-xs opacity-50 font-mono">{{
+          hasEnoughSnaps ? toDuration(snapshotPairs[0].dateZippedMS) : '[--:--:--]'
         }}</i>
       </button>
       <button
-        class="btn w-full bg-green-900 text-white vbox all-center"
-        :class="isCompact ? 'h-28' : 'h-20'"
-        @click="onSaveBufferNow('now')">
-        <i>SAVE NOW!</i>
-        <i class="text-xs opacity-50">I'm satisfied with my progress and wish to save now.</i>
-        <i class="text-xs opacity-50">{{
-          hasEnoughSnaps ? toDuration(snapshotPairs[1].dateZippedMS) : '[not ready yet]'
+        class="btn w-full bg-yellow-700 text-white vbox all-center h-20"
+        @click="onSaveBuffer('newest')"
+        title="Create a ZIP based on the newest snapshot.">
+        <i>SAVE RECENT</i>
+        <i class="text-xs opacity-50 font-mono">{{
+          hasEnoughSnaps ? toDuration(snapshotPairs[1].dateZippedMS) : '[--:--:--]'
         }}</i>
+      </button>
+      <button
+        class="btn w-full bg-green-900 text-white vbox all-center h-20"
+        @click="onSaveBuffer('instantly')"
+        title="Create a new ZIP right now!">
+        <i>SAVE INSTANTLY!</i>
+        <i class="text-xs opacity-50 mt-2 hbox items-center">
+          <b class="fa fa-exclamation-triangle text-2xl mr-2"></b>
+          Quit to MainMenu <br />or Exit Game first!
+        </i>
       </button>
     </div>
     <i class="border-4 border-double border-red-600 p-2" v-if="errorMessage">
@@ -117,7 +125,7 @@ async function autoSnapshot() {
   )
 }
 
-async function onSaveBufferNow(which) {
+async function onSaveBuffer(which) {
   errorMessage.value = ''
   let { data } = await axios.post('/buffer-write-current', { which })
   if (data.isError) {
@@ -126,7 +134,7 @@ async function onSaveBufferNow(which) {
     return
   }
 
-  trace('onSaveBufferNow', data)
+  trace('onSaveBuffer', data)
 
   emit('save-buffer')
 }
