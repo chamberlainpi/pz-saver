@@ -36,11 +36,12 @@ export async function restoreFromZIP(STATE, zipInfo) {
   const errors = []
 
   const writeFileOrFolder = async ({ relPath, file }) => {
-    const absPath = path.join(STATE.config.current, relPath)
+    const fixSlash = str => str.replace(/\\/g, '/')
+    const absPath = fixSlash( path.join(STATE.config.current, relPath) )
     const exists = fs.existsSync(absPath)
 
     try {
-      if (absPath.endsWith('\\')) {
+      if (absPath.endsWith('/')) {
         if (!exists) {
           await fs.mkdirp(absPath)
         }
