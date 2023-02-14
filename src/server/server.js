@@ -20,7 +20,6 @@ process.on('unhandledRejection', err => {
 
 const state = {
   YAML_CONFIG: '.private/pzconfig.yaml',
-  YAML_BASELINE: '.private/[name].baseline.yaml',
   PRIVATE_DIR: '.private',
   DIST: path.join(process.cwd(), '/dist'),
   ZIP_SNAPSHOT: '.private/[name].snap.zip',
@@ -48,7 +47,7 @@ fastify.ready(err => {
   if (err) throw err
 
   clear()
-  trace('Fastify server ready on port:'.magenta, PORT)
+  trace('Fastify server ready!'.magenta, `http://localhost:${PORT}`.cyan)
 })
 
 fastify.listen(PORT)
