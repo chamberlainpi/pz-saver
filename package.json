@@ -11,6 +11,7 @@
     "server": "nodemon -w src/server --exec \"node --expose-gc ./src/server/server.js\""
   },
   "dependencies": {
+    "@vue/runtime-core": "^3.3.11",
     "autoprefixer": "^10.4.2",
     "axios": "^0.26.0",
     "brownies": "^3.0.0",

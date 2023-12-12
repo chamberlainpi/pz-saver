@@ -1,7 +1,7 @@
 <template>
   <div class="game-folders panel">
     <div class="hbox items-center gap-1 font-bold">
-      <h1 class="nowrap"><icon name="folder-open p-2" />Folders</h1>
+      <h1 class="nowrap cursor-pointer" @click="showPanel = !showPanel"><icon name="folder-open p-2" />Folders</h1>
 
       <label class="hbox gap-1 shrink items-center mx-2">
         <input type="checkbox" class="rel scale-150 -top-1 btn" v-model="isAutoSetCurrent" />
@@ -28,29 +28,31 @@
       </div>
     </div>
 
-    <div class="hbox items-center w-full text-2xl px-2" v-if="!isCompact">
-      <i class="font-bold">Filters:</i>
-      <label v-for="filter in FILTERS" :key="filter" class="px-2 btn nowrap" :title="filter.fullname">
-        <input type="radio" :value="filter.fullname" v-model="selectedFilter" />
-        {{ filter.alias }}
-      </label>
-    </div>
+    <template v-if="showPanel">
+      <div class="hbox items-center w-full text-2xl px-2" v-if="!isCompact">
+        <i class="font-bold">Filters:</i>
+        <label v-for="filter in FILTERS" :key="filter" class="px-2 btn nowrap" :title="filter.fullname">
+          <input type="radio" :value="filter.fullname" v-model="selectedFilter" />
+          {{ filter.alias }}
+        </label>
+      </div>
 
-    <div v-for="gameFolder in gameFoldersFiltered" :key="gameFolder.path">
-      <label class="hbox all-center text-lg gap-2 px-2 py-1">
-        <input type="checkbox" class="rel scale-150 -top-1 btn" v-model="gameFolder.isSelected" v-if="!isCompact" />
-        <i class="flex-shrink hbox all-center">
-          <i
-            :class="{
-              'text-green-600': isCurrent(gameFolder),
-            }">
-            {{ selectedFilter === 'All' ? gameFolder.shortPath : gameFolder.shorterPath }}
+      <div v-for="gameFolder in gameFoldersFiltered" :key="gameFolder.path">
+        <label class="hbox all-center text-lg gap-2 px-2 py-1">
+          <input type="checkbox" class="rel scale-150 -top-1 btn" v-model="gameFolder.isSelected" v-if="!isCompact" />
+          <i class="flex-shrink hbox all-center">
+            <i
+              :class="{
+                'text-green-600': isCurrent(gameFolder),
+              }">
+              {{ selectedFilter === 'All' ? gameFolder.shortPath : gameFolder.shorterPath }}
+            </i>
+            <i class="small-tag bg-green-600" v-if="isCurrent(gameFolder)">C</i>
           </i>
-          <i class="small-tag bg-green-600" v-if="isCurrent(gameFolder)">C</i>
-        </i>
-        <i class="ml-auto opacity-50 font-mono" :title="gameFolder.date.mtimeMs">{{ gameFolder.ago.mtimeMs }}</i>
-      </label>
-    </div>
+          <i class="ml-auto opacity-50 font-mono" :title="gameFolder.date.mtimeMs">{{ gameFolder.ago.mtimeMs }}</i>
+        </label>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -70,6 +72,7 @@ const FILTERS = 'All, Build:Builder, Surv:Survivor, Sand:Sandbox, YH1D:You Have 
 })
 
 const selectedFilter = ref(cookies.filter || 'All')
+const showPanel = ref(true)
 const gameFolders = ref([])
 const gameFoldersSelected = computed(() => gameFolders.value.filter(g => g.isSelected))
 const oneSelected = computed(() => (gameFoldersSelected.value.length === 1 ? gameFoldersSelected.value[0] : null))

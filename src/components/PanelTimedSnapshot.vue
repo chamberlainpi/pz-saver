@@ -1,7 +1,7 @@
 <template>
   <div class="timed-snapshot mt-3 panel border-red-600border border-red-500">
     <div class="hbox items-center pb-4">
-      <h1 class="mr-4"><icon name="camera p-2" />Timed Snapshot</h1>
+      <h1 class="mr-4 cursor-pointer"><icon name="camera p-2" />Timed Snapshot</h1>
 
       <div class="hbox items-center ml-auto">
         <i
@@ -16,21 +16,23 @@
       </div>
     </div>
 
-    <div class="hbox border border-black rounded-md mb-2 p-1">
-      <div id="progress" class="h-3 rounded-md" :class="isSnapping ? 'bg-yellow-400' : 'bg-green-600'"></div>
-    </div>
-    <div class="hbox items-center text-xl">
-      <icon name="clock mr-1" />
-      <i class="mr-2">Every:</i>
-      <label
-        v-for="period in periodChoices"
-        :key="period"
-        class="btn border-2 border-gray-400 px-3 py-1 rounded-xl text-white text-center mx-0 mr-1"
-        :class="periodSelected == period ? 'bg-green-500 border-green-200' : 'bg-blue-400 border-blue-200'">
-        <input type="radio" class="hidden" :value="period" v-model="periodSelected" />
-        <i>{{ period }}</i>
-      </label>
-    </div>
+    <template v-if="!isCompact">
+      <div class="hbox border border-black rounded-md mb-2 p-1">
+        <div id="progress" class="h-3 rounded-md" :class="isSnapping ? 'bg-yellow-400' : 'bg-green-600'"></div>
+      </div>
+      <div class="hbox items-center text-xl">
+        <icon name="clock mr-1" />
+        <i class="mr-2">Every:</i>
+        <label
+          v-for="period in periodChoices"
+          :key="period"
+          class="btn border-2 border-gray-400 px-3 py-1 rounded-xl text-white text-center mx-0 mr-1"
+          :class="periodSelected == period ? 'bg-green-500 border-green-200' : 'bg-blue-400 border-blue-200'">
+          <input type="radio" class="hidden" :value="period" v-model="periodSelected" />
+          <i>{{ period }}</i>
+        </label>
+      </div>
+    </template>
 
     <div class="hbox">
       <button
@@ -69,9 +71,9 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from '@vue/runtime-core'
+import { computed, onBeforeUnmount, ref, watch } from '@vue/runtime-core'
 import { toDuration } from '../utils/extensions'
-import { configuration, status, checkStatuses, isCompact } from '../store'
+import { status, isCompact } from '../store'
 import _ from 'lodash'
 import axios from 'axios'
 import { cookies } from 'brownies'

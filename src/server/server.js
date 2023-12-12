@@ -4,8 +4,8 @@ import FastifyStatic from 'fastify-static'
 import 'colors'
 import _ from 'lodash'
 import { createRoutes } from './sv-routes.js'
-import axios from 'axios'
 import path from 'path'
+import yaml from 'yaml'
 
 globalThis.trace = console.log.bind(console)
 
@@ -28,19 +28,26 @@ const state = {
 
 const fastify = Fastify()
 fastify.register(FastifyStatic, { root: state.DIST })
-fastify.addHook('onError', async (request, reply, error) => {
+fastify.addHook('onError', async (req, res, error) => {
   trace('Server Error!'.red, error)
 })
 
 makeRoutesFromObj(fastify, createRoutes(state))
 
-const TEST_API = axios.create({ baseURL: `http://localhost:${PORT}/` })
-
+//Load config here
 ;(async () => {
   state.config = await tryLoadFile(state.YAML_CONFIG, { pzRoot: 'not-set' })
-  trace('YAML Config Successfully loaded:\n', state.config)
 
-  //Can make `TEST_API` calls here...
+  const toColoredLines = str =>
+    str
+      //no-format
+      .split('\n')
+      .filter(line => line.trim().length)
+      .map(line => line.split(': '))
+      .map(parts => [parts[0].magenta, parts[1].green].join(': '))
+      .join('\n')
+
+  trace('YAML Config:\n', toColoredLines(yaml.stringify(state.config)))
 })()
 
 fastify.ready(err => {
@@ -48,6 +55,8 @@ fastify.ready(err => {
 
   clear()
   trace('Fastify server ready!'.magenta, `http://localhost:${PORT}`.cyan)
+  const args = [...process.execArgv, ...process.argv]
+  trace('Using process args:\n', args.join(' ').yellow)
 })
 
 fastify.listen(PORT)
